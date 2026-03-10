@@ -136,6 +136,8 @@
         .profile-bio { margin-top: 12px; color: #cbd5e1; line-height: 1.5; }
         .profile-row { display: grid; grid-template-columns: 1fr; gap: 20px; grid-column: 1 / -1; }
         .profile-list { display: grid; gap: 10px; max-height: 280px; overflow-y: auto; }
+        .reviews-view { display:none; }
+        .review-card { background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)); border:1px solid var(--glass-border); border-radius:18px; padding:14px; margin-bottom:12px; }
         .profile-mini { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 14px; padding: 10px 12px; }
         .profile-mini-main { display: flex; align-items: center; gap: 10px; overflow: hidden; }
         .profile-mini-avatar { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; background: #0b1220; }
@@ -271,7 +273,7 @@
         <div class="nav-link" data-view="Serials" onclick="Core.navigate('Serials', this)"><i class="fa-solid fa-tv"></i> Seriály</div>
         <div class="nav-link" data-view="Anime" onclick="Core.navigate('Anime', this)"><i class="fa-solid fa-ghost"></i> Anime</div>
         <div class="nav-link" data-view="favorites" onclick="Core.navigate('favorites', this)"><i class="fa-solid fa-heart" style="color:var(--c-fav)"></i> Oblíbené</div>
-        <div class="nav-link" data-view="profile" onclick="Core.navigate('profile', this)"><i class="fa-solid fa-user"></i> Profil</div>
+        <div class="nav-link" data-view="reviews" onclick="Core.navigate('reviews', this)"><i class="fa-solid fa-pen-to-square"></i> Recenze</div>
         
         <div class="nav-label">Moje Seznamy <i class="fa-solid fa-plus" style="cursor:pointer" onclick="Core.openPlaylistCreateModal()"></i></div>
         <div id="sidebar-playlists"></div>
@@ -352,6 +354,13 @@
                     <div id="community-profiles-list" class="profile-list"></div>
                     <button class="page-btn" style="margin-top:12px" onclick="Core.openProfile(Core.state.user?.uid)">Zpět na můj profil</button>
                 </div>
+            </div>
+        </section>
+
+        <section id="reviews-view" class="reviews-view">
+            <div class="profile-card">
+                <div class="nav-label" style="margin:0 0 12px 0">Komunitní recenze</div>
+                <div id="reviews-list-root"></div>
             </div>
         </section>
     </div>
@@ -493,12 +502,14 @@
             publicProfiles: [],
             activeProfileUid: null,
             profileRecentReviews: [],
-            recoCache: { watchedIds: new Set(), catPref: { Movie:0, Serials:0, Anime:0 } }
+            recoCache: { watchedIds: new Set(), catPref: { Movie:0, Serials:0, Anime:0 } },
+            allReviews: []
         },
 
         async init() {
             this.syncPlaylists();
             this.subscribeProfiles();
+            this.subscribeAllReviews();
             this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
             await this.loadUserRecentReviews(this.state.activeProfileUid);
             this.renderProfile();
@@ -541,7 +552,7 @@
             this.state.view = view; this.state.page = 1;
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
             if(el) el.classList.add('active');
-            let label = view === 'all' ? 'Všechno' : (view === 'favorites' ? 'Oblíbené' : (view === 'profile' ? 'Profil uživatele' : (this.state.db.playlists[view] ? `Seznam: ${view}` : view)));
+            let label = view === 'all' ? 'Všechno' : (view === 'favorites' ? 'Oblíbené' : (view === 'profile' ? 'Profil uživatele' : (view === 'reviews' ? 'Recenze komunity' : (this.state.db.playlists[view] ? `Seznam: ${view}` : view))));
             document.getElementById('view-title').innerText = label;
             if (view === 'profile') this.openProfile(this.state.activeProfileUid || this.state.user?.uid);
             this.renderGrid();
@@ -584,6 +595,18 @@
             });
         },
 
+        subscribeAllReviews() {
+            FB.onSnapshot(FB.query(FB.collection(FB.db, 'comments'), FB.orderBy('createdAt', 'desc'), FB.limit(200)), (snap) => {
+                this.state.allReviews = snap.docs.map(d => {
+                    const c = d.data() || {};
+                    return { ...c, id: d.id, createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : Date.now() };
+                });
+                if (this.state.view === 'reviews') this.renderReviewsView();
+            }, () => {
+                // fallback: keep existing cache
+            });
+        },
+
         async openProfile(uid) {
             this.state.activeProfileUid = uid || this.state.user?.uid;
             await this.loadUserRecentReviews(this.state.activeProfileUid);
@@ -604,7 +627,7 @@
                         createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : 0
                     });
                 });
-                this.state.profileRecentReviews = collected.sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
+                this.state.profileRecentReviews = collected.sort((a, b) => b.createdAt - a.createdAt);
             } catch (e) {
                 console.error('loadUserRecentReviews failed', e);
                 this.state.profileRecentReviews = [];
@@ -676,13 +699,24 @@
                 </div>
             `).join('') || `<div style="color:var(--text-dim)">Zatím nic nezhlédnuto.</div>`;
 
-            document.getElementById('profile-recent-reviews').innerHTML = this.state.profileRecentReviews.map(r => `
-                <div class="recent-item">
-                    <div class="recent-title">${r.mediaTitle}</div>
+            const lastThree = this.state.profileRecentReviews.slice(0, 3);
+            const older = this.state.profileRecentReviews.slice(3);
+            document.getElementById('profile-recent-reviews').innerHTML = `
+                <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:6px">Poslední 3 recenze</div>
+                ${lastThree.map(r => `
+                <div class=\"recent-item\">
+                    <div class=\"recent-title\">${r.mediaTitle}</div>
                     <div>${(r.text || '').slice(0, 140)}</div>
-                    <div class="recent-meta">${r.mediaCat || ''}</div>
-                </div>
-            `).join('') || `<div style="color:var(--text-dim)">Žádné recenze.</div>`;
+                    <div class=\"recent-meta\">${r.mediaCat || ''}</div>
+                </div>`).join('') || `<div style=\"color:var(--text-dim)\">Žádné recenze.</div>`}
+                <div style="font-size:0.75rem;color:var(--text-dim);margin:10px 0 6px">Starší recenze</div>
+                ${older.map(r => `
+                <div class=\"recent-item\">
+                    <div class=\"recent-title\">${r.mediaTitle}</div>
+                    <div>${(r.text || '').slice(0, 100)}</div>
+                    <div class=\"recent-meta\">${r.mediaCat || ''}</div>
+                </div>`).join('') || `<div style=\"color:var(--text-dim)\">Bez dalších recenzí.</div>`}
+            `;
 
             document.getElementById('community-profiles-list').innerHTML = this.state.publicProfiles
                 .filter(p => p.uid !== viewedUid)
@@ -713,6 +747,7 @@
             this.state.profile.bio = bio;
             await this.save();
             await this.syncReviewAuthors();
+            await this.syncFallbackReviewAuthors();
             this.state.activeProfileUid = this.state.user?.uid || null;
             await this.loadUserRecentReviews(this.state.activeProfileUid);
             this.renderProfile();
@@ -729,6 +764,25 @@
                 for (const d of snap.docs) {
                     const data = d.data();
                     await FB.setDoc(FB.doc(FB.db, 'comments', d.id), { ...data, author: nick });
+                }
+            } catch (_) {}
+        },
+
+        async syncFallbackReviewAuthors() {
+            const uid = this.state.user?.uid;
+            if (!uid) return;
+            const nick = this.state.profile.nickname || 'Uživatel';
+            try {
+                const snap = await FB.getDocs(FB.query(FB.collection(FB.db, 'global_ratings'), FB.limit(200)));
+                for (const d of snap.docs) {
+                    const data = d.data() || {};
+                    const arr = Array.isArray(data.commentsFallback) ? data.commentsFallback : [];
+                    let changed = false;
+                    const patched = arr.map(c => {
+                        if (c.uid === uid && c.author !== nick) { changed = true; return { ...c, author: nick }; }
+                        return c;
+                    });
+                    if (changed) await FB.setDoc(FB.doc(FB.db, 'global_ratings', d.id), { ...data, commentsFallback: patched });
                 }
             } catch (_) {}
         },
@@ -768,16 +822,30 @@
             if(v.length > 1) {
                 this.startSearchFocus();
                 const matches = mediaData.filter(m => m.title.toLowerCase().includes(v.toLowerCase())).slice(0, 5);
-                if(matches.length > 0) {
+                const users = this.state.publicProfiles.filter(p => (p.nickname || '').toLowerCase().includes(v.toLowerCase())).slice(0, 4);
+                if(matches.length > 0 || users.length > 0) {
                     dropdown.style.display = 'block';
-                    dropdown.innerHTML = matches.map(m => `
-                        <div class="search-item" onclick="Core.openModal('${m.id}')">
-                            <img src="${m.image}">
+                    const mediaHtml = matches.map(m => `
+                        <div class=\"search-item\" onclick=\"Core.openModal('${m.id}')\">
+                            <img src=\"${m.image}\">
                             <div>
-                                <div style="font-weight:700; font-size:0.9rem">${m.title}</div>
-                                <div style="font-size:0.7rem; color:var(--accent)">${m.cat} • ${m.year}</div>
+                                <div style=\"font-weight:700; font-size:0.9rem\">${m.title}</div>
+                                <div style=\"font-size:0.7rem; color:var(--accent)\">${m.cat} • ${m.year}</div>
                             </div>
                         </div>`).join('');
+                    const userHtml = users.map(u => {
+                        const av = u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.nickname || 'U') + '&background=0f172a&color=38bdf8&bold=true';
+                        return `
+                        <div class=\"search-item\" onclick=\"Core.navigate('profile'); Core.openProfile('${u.uid}')\">
+                            <img src=\"${av}\">
+                            <div>
+                                <div style=\"font-weight:700; font-size:0.9rem\">${u.nickname || 'Uživatel'}</div>
+                                <div style=\"font-size:0.7rem; color:var(--accent)\">Uživatel</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                if (this.state.view === 'reviews') this.renderReviewsView();
+                    dropdown.innerHTML = mediaHtml + userHtml;
                 } else dropdown.style.display = 'none';
             } else if (!this.state.searchFocused) {
                 dropdown.style.display = 'none';
@@ -884,17 +952,29 @@
 
         renderGrid() {
             const profileView = document.getElementById('profile-view');
+            const reviewsView = document.getElementById('reviews-view');
             const mainGrid = document.getElementById('main-grid');
             const pagination = document.getElementById('main-pagination');
             if (this.state.view === 'profile') {
                 profileView.style.display = 'block';
+                reviewsView.style.display = 'none';
                 mainGrid.style.display = 'none';
                 pagination.style.display = 'none';
                 this.renderProfile();
                 if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `PROFIL`;
                 return;
             }
+            if (this.state.view === 'reviews') {
+                profileView.style.display = 'none';
+                reviewsView.style.display = 'block';
+                mainGrid.style.display = 'none';
+                pagination.style.display = 'none';
+                this.renderReviewsView();
+                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `RECENZE`;
+                return;
+            }
             profileView.style.display = 'none';
+            reviewsView.style.display = 'none';
             mainGrid.style.display = 'grid';
             pagination.style.display = 'flex';
             const grid = document.getElementById('main-grid');
@@ -950,6 +1030,21 @@
             }).join('');
         },
 
+
+        renderReviewsView() {
+            const root = document.getElementById('reviews-list-root');
+            const sorted = [...this.state.allReviews].sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+            root.innerHTML = sorted.slice(0, 120).map(r => {
+                const dt = r.createdAt ? new Date(r.createdAt).toLocaleString('cs-CZ') : 'teď';
+                const profile = this.state.publicProfiles.find(p => p.uid === r.uid);
+                const author = profile?.nickname || r.author || 'Uživatel';
+                const w = this.getReviewWeight(r.text, author);
+                const open = r.uid ? `<button class="page-btn" style="padding:6px 10px" onclick="Core.navigate('profile'); Core.openProfile('${r.uid}')">Profil</button>` : '';
+                return `<div class="review-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><b>${r.mediaTitle || 'Titul'}</b><div class="recent-meta">${author} • ${dt}</div></div><div class="review-tools"><span class="page-btn" style="padding:6px 10px; cursor:default">Váha ${w}</span>${open}</div></div><div style="margin-top:8px">${(r.text || '').replace(/</g,'&lt;')}</div></div>`;
+            }).join('') || `<div style="color:var(--text-dim)">Žádné recenze.</div>`;
+        },
+
+
         openModal(id) {
             const item = mediaData.find(x => x.id == id); this.state.activeItem = item;
             document.getElementById('m-hero').style.backgroundImage = `url(${item.image})`;
@@ -982,6 +1077,7 @@
                     this.loadCommentsFallback(id);
                     return;
                 }
+                this.state.allReviews = snap.docs.map(d => { const c = d.data() || {}; return { ...c, id: d.id, createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : Date.now() }; });
                 list.innerHTML = snap.docs.map(d => {
                     const c = d.data();
                     const dt = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString('cs-CZ') : 'teď';
@@ -1002,6 +1098,7 @@
                 const snap = await FB.getDoc(FB.doc(FB.db, 'global_ratings', id.toString()));
                 const data = snap.exists() ? snap.data() : {};
                 const arr = (data.commentsFallback || []).slice(0, 100);
+                this.state.allReviews = arr.map((c, i) => ({ ...c, id: `fb-${i}`, createdAt: c.createdAt || Date.now() }));
                 if (!arr.length) {
                     list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Zatím bez recenzí.</div>`;
                     return;
