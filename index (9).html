@@ -74,7 +74,7 @@
         .search-item:hover { background: var(--glass-heavy); }
         .search-item img { width: 40px; height: 55px; border-radius: 8px; object-fit: cover; }
 
-        .viewport-content { padding: 60px; }
+        .viewport-content { padding: 48px 60px 60px; max-width: 1520px; margin: 0 auto; }
         .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 35px; }
 
         .media-card { position: relative; border-radius: 25px; cursor: pointer; transition: 0.5s var(--spring); }
@@ -121,12 +121,12 @@
         .new-playlist-group { display: flex; gap: 12px; margin-top: 25px; padding-top: 25px; border-top: 1px solid var(--glass-border); }
 
         .profile-view { display: none; }
-        .profile-shell { display: grid; gap: 20px; grid-template-columns: 1.25fr 1fr; }
+        .profile-shell { display: grid; gap: 20px; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
         .profile-card { background: linear-gradient(165deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)); border: 1px solid var(--glass-border); border-radius: 22px; padding: 22px; box-shadow: 0 18px 35px rgba(0,0,0,0.25); }
         .profile-head { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
         .profile-avatar { width: 82px; height: 82px; border-radius: 22px; object-fit: cover; border: 2px solid var(--glass-border); background: #0b1220; }
         .profile-meta h3 { font-size: 1.5rem; margin-bottom: 4px; }
-        .profile-meta p { color: var(--text-dim); font-size: 0.9rem; }
+        .profile-meta p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.4; }
         .profile-form { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 15px; }
         .profile-form .search-input { padding-left: 18px; }
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
@@ -137,7 +137,7 @@
         .profile-row { display: grid; grid-template-columns: 1fr; gap: 20px; grid-column: 1 / -1; }
         .profile-list { display: grid; gap: 10px; max-height: 280px; overflow-y: auto; }
         .reviews-view { display:none; }
-        .review-card { background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)); border:1px solid var(--glass-border); border-radius:18px; padding:14px; margin-bottom:12px; }
+        .review-card { background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)); border:1px solid var(--glass-border); border-radius:18px; padding:14px; margin-bottom:12px; word-break: break-word; }
         .profile-mini { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 14px; padding: 10px 12px; }
         .profile-mini-main { display: flex; align-items: center; gap: 10px; overflow: hidden; }
         .profile-mini-avatar { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; background: #0b1220; }
@@ -145,7 +145,7 @@
         .profile-mini-sub { color: var(--text-dim); font-size: 0.75rem; }
         .recent-item { border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px; background: rgba(255,255,255,0.02); }
         .recent-title { font-weight: 700; }
-        .recent-meta { color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; }
+        .recent-meta { color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; line-height: 1.4; }
 
         .comments-wrap { margin-top: 30px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px; }
         .comment-form { display: grid; gap: 10px; margin-bottom: 15px; }
@@ -190,14 +190,15 @@
             #mobile-user-badge { display: none; }
 
             .header-sticky { padding: calc(12px + env(safe-area-inset-top)) 16px 12px; gap: 10px; }
-            .search-input { padding: 14px 20px 14px 45px; font-size: 0.9rem; }
+            .search-input { padding: 14px 20px 14px 45px; font-size: 16px; }
             .search-wrapper i { left: 15px; }
             #stats-counter { display: none; }
             .header-profile-btn span { display: none; }
 
-            .viewport-content { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); }
+            .viewport-content { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 100%; }
             #view-title { font-size: clamp(1.8rem, 8vw, 2.2rem); margin-bottom: 20px; }
             .media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+            #search-results { max-height: min(52vh, 360px); border-radius: 16px; }
             
             .card-actions { opacity: 1; transform: scale(0.85); top: 5px; right: 5px; transform-origin: top right; }
             .card-ratings-wrapper { transform: scale(0.85); top: 5px; left: 5px; transform-origin: top left; }
@@ -217,6 +218,11 @@
             .user-identity { margin: 10px 15px; padding: 15px; }
             .profile-avatar { width: 68px; height: 68px; border-radius: 16px; }
             .profile-shell { grid-template-columns: 1fr; }
+            .profile-form { grid-template-columns: 1fr; }
+            .profile-card { padding: 16px; border-radius: 18px; }
+            .review-card { padding: 12px; border-radius: 14px; }
+            .review-tools { flex-wrap: wrap; justify-content: flex-end; }
+            .recent-item { padding: 9px; }
         }
 
         @media (max-width: 680px) {
@@ -229,7 +235,8 @@
         }
 
         @media (max-width: 420px) {
-            .search-input { font-size: 0.85rem; border-radius: 14px; }
+            .search-input { font-size: 16px; border-radius: 14px; }
+            .search-wrapper i { font-size: 0.82rem; }
             .media-grid { gap: 10px; }
             .poster-wrapper { border-radius: 16px; }
             .action-btn { width: 34px; height: 34px; }
@@ -870,6 +877,12 @@
             if (dropdown) dropdown.style.display = 'none';
         },
 
+        openProfileFromSearch(uid) {
+            this.navigate('profile');
+            this.openProfile(uid);
+            this.endSearchFocus();
+        },
+
         handleSearch(v) {
             this.state.query = v;
             const dropdown = document.getElementById('search-results');
@@ -890,7 +903,7 @@
                     const userHtml = users.map(u => {
                         const av = u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.nickname || 'U') + '&background=0f172a&color=38bdf8&bold=true';
                         return `
-                        <div class=\"search-item\" onclick=\"Core.navigate('profile'); Core.openProfile('${u.uid}')\">
+                        <div class=\"search-item\" onclick=\"Core.openProfileFromSearch('${u.uid}')\">
                             <img src=\"${av}\">
                             <div>
                                 <div style=\"font-weight:700; font-size:0.9rem\">${u.nickname || 'Uživatel'}</div>
@@ -898,7 +911,6 @@
                             </div>
                         </div>`;
                     }).join('');
-                if (this.state.view === 'reviews') this.renderReviewsView();
                     dropdown.innerHTML = mediaHtml + userHtml;
                 } else dropdown.style.display = 'none';
             } else if (!this.state.searchFocused) {
