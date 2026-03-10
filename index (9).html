@@ -49,7 +49,8 @@
         .nav-link:hover .delete-playlist { opacity: 1; }
 
         /* User Identity Widget */
-        .user-identity { padding: 20px 25px; margin: 20px 25px 0; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; align-items: center; gap: 12px; }
+        .user-identity { padding: 20px 25px; margin: 20px 25px 0; background: linear-gradient(155deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02)); border: 1px solid var(--glass-border); border-radius: 22px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.25s var(--smooth); }
+        .user-identity:hover { border-color: var(--accent); box-shadow: 0 10px 25px rgba(0,0,0,0.35); transform: translateY(-1px); }
         .user-avatar { width: 35px; height: 35px; border-radius: 50%; background: var(--accent); color: black; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem; flex-shrink: 0; }
         .user-info { overflow: hidden; }
         .user-email { font-size: 0.8rem; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -120,8 +121,8 @@
         .new-playlist-group { display: flex; gap: 12px; margin-top: 25px; padding-top: 25px; border-top: 1px solid var(--glass-border); }
 
         .profile-view { display: none; }
-        .profile-shell { display: grid; gap: 20px; }
-        .profile-card { background: linear-gradient(165deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)); border: 1px solid var(--glass-border); border-radius: 22px; padding: 22px; box-shadow: 0 18px 35px rgba(0,0,0,0.25); }
+        .profile-shell { display: grid; gap: 20px; grid-template-columns: 1.25fr 1fr; }
+        .profile-card { background: linear-gradient(165deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)); border: 1px solid var(--glass-border); border-radius: 22px; padding: 22px; box-shadow: 0 18px 35px rgba(0,0,0,0.25); }
         .profile-head { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
         .profile-avatar { width: 82px; height: 82px; border-radius: 22px; object-fit: cover; border: 2px solid var(--glass-border); background: #0b1220; }
         .profile-meta h3 { font-size: 1.5rem; margin-bottom: 4px; }
@@ -133,9 +134,9 @@
         .stat-num { font-family: 'JetBrains Mono'; font-size: 1.4rem; color: var(--accent); font-weight: 800; }
         .stat-lab { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
         .profile-bio { margin-top: 12px; color: #cbd5e1; line-height: 1.5; }
-        .profile-row { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .profile-row { display: grid; grid-template-columns: 1fr; gap: 20px; grid-column: 1 / -1; }
         .profile-list { display: grid; gap: 10px; max-height: 280px; overflow-y: auto; }
-        .profile-mini { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 14px; padding: 10px 12px; }
+        .profile-mini { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 14px; padding: 10px 12px; }
         .profile-mini-main { display: flex; align-items: center; gap: 10px; overflow: hidden; }
         .profile-mini-avatar { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; background: #0b1220; }
         .profile-mini-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -151,8 +152,6 @@
         .comment-item { background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px; }
         .comment-head { display: flex; justify-content: space-between; gap: 10px; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 6px; }
          .comment-author { color: var(--accent); font-weight: 700; }
-        .header-profile-btn { background: transparent; border: 1px solid var(--glass-border); color: white; border-radius: 14px; height: 44px; padding: 0 10px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-        .header-profile-avatar { width: 28px; height: 28px; border-radius: 10px; object-fit: cover; background: #111827; }
         .review-tools { display: flex; gap: 8px; align-items: center; }
         #playlist-create-modal { position: fixed; inset: 0; z-index: 25000; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; }
         .playlist-create-box { width: 100%; max-width: 420px; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 24px; padding: 22px; }
@@ -215,6 +214,7 @@
             .auth-card { padding: 35px 25px; }
             .user-identity { margin: 10px 15px; padding: 15px; }
             .profile-avatar { width: 68px; height: 68px; border-radius: 16px; }
+            .profile-shell { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 680px) {
@@ -280,7 +280,7 @@
         <div class="nav-link" onclick="Core.logout()" style="color: #ff4757;"><i class="fa-solid fa-power-off"></i> Odhlásit</div>
     </div>
 
-    <div class="user-identity">
+    <div class="user-identity" onclick="Core.openOwnProfile()">
         <div class="user-avatar" id="pc-user-initials">?</div>
         <div class="user-info">
             <div class="user-email" id="pc-user-email">Načítání...</div>
@@ -300,10 +300,6 @@
                    oninput="Core.handleSearch(this.value)" onfocus="Core.startSearchFocus(); Core.handleSearch(this.value)" onblur="setTimeout(() => Core.endSearchFocus(), 180)">
             <div id="search-results"></div>
         </div>
-        <button class="header-profile-btn" onclick="Core.openOwnProfile()">
-            <img id="header-profile-avatar" class="header-profile-avatar" src="" alt="avatar">
-            <span>Profil</span>
-        </button>
         <div id="stats-counter" style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.8rem; white-space: nowrap;">0 TITULŮ</div>
     </header>
 
@@ -507,6 +503,7 @@
             await this.loadUserRecentReviews(this.state.activeProfileUid);
             this.renderProfile();
             this.renderGrid();
+            window.addEventListener('resize', () => this.updateSearchOverlayTop());
         },
 
         toggleSidebar(f) {
@@ -649,8 +646,6 @@
             document.getElementById('profile-bio-view').innerText = bio;
             document.getElementById('pc-user-email').innerText = nick;
             document.getElementById('pc-user-initials').innerText = nick.charAt(0).toUpperCase();
-            const headerAvatar = document.getElementById('header-profile-avatar');
-            if (headerAvatar) headerAvatar.src = avatar;
 
             document.getElementById('profile-nickname-input').disabled = !isOwn;
             document.getElementById('profile-avatar-input').disabled = !isOwn;
@@ -738,10 +733,20 @@
             } catch (_) {}
         },
 
+
+        updateSearchOverlayTop() {
+            const overlay = document.getElementById('search-focus-overlay');
+            const searchWrap = document.querySelector('.search-wrapper');
+            if (!overlay || !searchWrap) return;
+            const rect = searchWrap.getBoundingClientRect();
+            overlay.style.top = `${Math.round(rect.bottom + 8)}px`;
+        },
+
         startSearchFocus() {
             this.state.searchFocused = true;
             const wrapper = document.querySelector('.search-wrapper');
             const overlay = document.getElementById('search-focus-overlay');
+            this.updateSearchOverlayTop();
             if (wrapper) wrapper.classList.add('focused');
             if (overlay) overlay.classList.add('active');
         },
@@ -750,6 +755,7 @@
             this.state.searchFocused = false;
             const wrapper = document.querySelector('.search-wrapper');
             const overlay = document.getElementById('search-focus-overlay');
+            this.updateSearchOverlayTop();
             const dropdown = document.getElementById('search-results');
             if (wrapper) wrapper.classList.remove('focused');
             if (overlay) overlay.classList.remove('active');
@@ -956,6 +962,17 @@
             document.getElementById('modal-engine').style.display = 'flex';
         },
 
+
+        getReviewWeight(text, author) {
+            const len = (text || '').trim().length;
+            let score = Math.min(100, Math.round(len / 6));
+            const activity = this.state.profileRecentReviews?.length || 0;
+            if (author && author === this.state.profile.nickname) score += Math.min(10, activity);
+            if (len > 280) score += 10;
+            return Math.max(1, Math.min(100, score));
+        },
+
+
         bindComments(id) {
             if (this.state.commentsUnsub) this.state.commentsUnsub();
             const q = FB.query(FB.collection(FB.db, 'comments'), FB.where('mediaId', '==', id.toString()), FB.orderBy('createdAt', 'desc'), FB.limit(100));
@@ -972,7 +989,7 @@
                     const authorName = profile?.nickname || c.author || 'Uživatel';
                     const uidBtn = c.uid ? `<button class=\"page-btn\" style=\"padding:6px 10px\" onclick=\"Core.navigate('profile'); Core.openProfile('${c.uid}')\">Profil</button>` : '';
                     const delBtn = c.uid && c.uid === this.state.user?.uid ? `<button class=\"page-btn\" style=\"padding:6px 10px\" onclick=\"Core.deleteReview('${d.id}', '${id}')\">Smazat</button>` : '';
-                    return `<div class=\"comment-item\"><div class=\"comment-head\"><span class=\"comment-author\">${authorName}</span><span>${dt}</span><span class=\"review-tools\">${uidBtn}${delBtn}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
+                    const w = this.getReviewWeight(c.text, authorName); return `<div class=\"comment-item\"><div class=\"comment-head\"><span class=\"comment-author\">${authorName}</span><span>${dt}</span><span class=\"review-tools\"><span class=\"page-btn\" style=\"padding:6px 10px; cursor:default\">Váha ${w}</span>${uidBtn}${delBtn}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
                 }).join('');
             }, () => {
                 this.loadCommentsFallback(id);
@@ -991,7 +1008,7 @@
                 }
                 list.innerHTML = arr.map(c => {
                     const dt = c.createdAt ? new Date(c.createdAt).toLocaleString('cs-CZ') : 'teď';
-                    return `<div class="comment-item"><div class="comment-head"><span class="comment-author">${c.author || 'Uživatel'}</span><span>${dt}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
+                    const w = this.getReviewWeight(c.text, c.author); return `<div class="comment-item"><div class="comment-head"><span class="comment-author">${c.author || 'Uživatel'}</span><span>${dt}</span><span class="page-btn" style="padding:6px 10px; cursor:default">Váha ${w}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
                 }).join('');
             } catch (_) {
                 list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Recenze nejsou dostupné.</div>`;
