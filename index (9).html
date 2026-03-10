@@ -677,11 +677,33 @@
         },
 
         subscribeAllReviews() {
-            FB.onSnapshot(FB.query(FB.collection(FB.db, 'comments'), FB.orderBy('createdAt', 'desc'), FB.limit(200)), (snap) => {
-                this.state.allReviews = snap.docs.map(d => {
+            FB.onSnapshot(FB.query(FB.collection(FB.db, 'comments'), FB.orderBy('createdAt', 'desc'), FB.limit(250)), async (snap) => {
+                const live = snap.docs.map(d => {
                     const c = d.data() || {};
                     return { ...c, id: d.id, createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : Date.now() };
                 });
+                const seen = new Set(live.map(r => `${r.uid || 'anon'}|${r.mediaId || ''}|${r.text || ''}`));
+                try {
+                    const fallbackSnap = await FB.getDocs(FB.query(FB.collection(FB.db, 'global_ratings'), FB.limit(250)));
+                    fallbackSnap.forEach(d => {
+                        const data = d.data() || {};
+                        const arr = Array.isArray(data.commentsFallback) ? data.commentsFallback : [];
+                        arr.forEach((c, i) => {
+                            const key = `${c.uid || 'anon'}|${c.mediaId || d.id}|${c.text || ''}`;
+                            if (seen.has(key)) return;
+                            seen.add(key);
+                            live.push({
+                                ...c,
+                                id: `fb-${d.id}-${i}`,
+                                mediaId: c.mediaId || d.id?.toString() || '',
+                                mediaTitle: c.mediaTitle || this.getMediaById(d.id)?.title || 'Titul',
+                                mediaCat: c.mediaCat || this.getMediaById(d.id)?.cat || '',
+                                createdAt: c.createdAt || 0
+                            });
+                        });
+                    });
+                } catch (_) {}
+                this.state.allReviews = live.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 300);
                 if (this.state.view === 'reviews') this.renderReviewsView();
             }, () => {
                 // fallback: keep existing cache
@@ -1002,16 +1024,8 @@
             const hasQuery = q.length > 0;
 
             const matchedMedia = (hasQuery ? this.state.mediaRecords.filter(m => m._qTitle.includes(q)) : []).slice(0, 5);
-            const matchedUsers = this.state.publicProfiles
-                .filter(p => {
-                    if (!hasQuery) return true;
-                    const n = this.normalizeText(p.nickname || '');
-                    const b = this.normalizeText(p.bio || '');
-                    return n.includes(q) || b.includes(q);
-                })
-                .slice(0, hasQuery ? 6 : 10);
 
-            if (matchedMedia.length === 0 && matchedUsers.length === 0) {
+            if (matchedMedia.length === 0) {
                 dropdown.style.display = 'none';
                 return;
             }
@@ -1025,36 +1039,23 @@
                     </div>
                 </div>`).join('');
 
-            const usersLabel = `<div style="padding:10px 20px 6px; font-size:0.68rem; font-weight:800; letter-spacing:1.3px; color:var(--text-dim); text-transform:uppercase;">Komunitní profily</div>`;
-            const userHtml = matchedUsers.map(u => {
-                const av = u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.nickname || 'U') + '&background=0f172a&color=38bdf8&bold=true';
-                return `
-                <div class="search-item" onclick="Core.openProfileFromSearch('${u.uid}')">
-                    <img src="${av}">
-                    <div>
-                        <div style="font-weight:700; font-size:0.9rem">${u.nickname || 'Uživatel'}</div>
-                        <div style="font-size:0.7rem; color:var(--accent)">${u.bio ? u.bio.slice(0, 44) : 'Komunitní profil'}</div>
-                    </div>
-                </div>`;
-            }).join('');
-
-            dropdown.innerHTML = mediaHtml + usersLabel + userHtml;
+            dropdown.innerHTML = mediaHtml;
             dropdown.style.display = 'block';
         },
 
         handleSearch(v) {
-            this.state.query = v;
+            this.state.query = '';
             const dropdown = document.getElementById('search-results');
             if(v.length > 1) {
                 this.startSearchFocus();
                 this.renderSearchDropdown(v);
             } else if (this.state.searchFocused && v.length === 0) {
-                this.renderSearchDropdown('');
+                dropdown.style.display = 'none';
             } else if (!this.state.searchFocused) {
                 dropdown.style.display = 'none';
             }
             clearTimeout(this.state.searchTimeout);
-            this.state.searchTimeout = setTimeout(() => { this.state.page = 1; this.renderGrid(); }, 300);
+            this.state.searchTimeout = setTimeout(() => {}, 150);
         },
 
         changePage(o) { this.state.page += o; this.renderGrid(); document.getElementById('scroller').scrollTo(0,0); },
@@ -1283,7 +1284,6 @@
                     this.loadCommentsFallback(id);
                     return;
                 }
-                this.state.allReviews = snap.docs.map(d => { const c = d.data() || {}; return { ...c, id: d.id, createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : Date.now() }; });
                 list.innerHTML = snap.docs.map(d => {
                     const c = d.data();
                     const dt = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString('cs-CZ') : 'teď';
@@ -1304,7 +1304,6 @@
                 const snap = await FB.getDoc(FB.doc(FB.db, 'global_ratings', id.toString()));
                 const data = snap.exists() ? snap.data() : {};
                 const arr = (data.commentsFallback || []).slice(0, 100);
-                this.state.allReviews = arr.map((c, i) => ({ ...c, id: `fb-${i}`, createdAt: c.createdAt || Date.now() }));
                 if (!arr.length) {
                     list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Zatím bez recenzí.</div>`;
                     return;
