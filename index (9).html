@@ -17,6 +17,7 @@
             --text-main: #f8fafc; --text-dim: #64748b;
             --spring: cubic-bezier(0.34, 1.56, 0.64, 1); --smooth: cubic-bezier(0.4, 0, 0.2, 1);
             --c-anime: #f43f5e; --c-star: #fbbf24; --c-fav: #ff4757;
+            --header-h: 98px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
@@ -24,13 +25,15 @@
         ::-webkit-scrollbar-thumb { background: var(--glass-heavy); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-        body { font-family: 'Outfit', sans-serif; background-color: var(--bg-deep); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+        body { font-family: 'Outfit', sans-serif; background-color: var(--bg-deep); color: var(--text-main); min-height: 100vh; min-height: 100dvh; height: 100dvh; display: flex; overflow: hidden; }
 
         #app-canvas { position: fixed; inset: -100px; z-index: -1; background-size: cover; background-position: center; filter: blur(80px) brightness(0.12) saturate(1.8); transition: background-image 1.5s var(--smooth); transform: scale(1.1); }
         
         /* Sidebar Navigation */
         #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 990; backdrop-filter: blur(5px); transition: 0.3s; opacity: 0; }
         #sidebar-overlay.active { display: block; opacity: 1; }
+        #search-focus-overlay { position: fixed; inset: var(--header-h) 0 0 320px; z-index: 850; background: rgba(2, 5, 12, 0.82); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transition: opacity 0.25s var(--smooth); }
+        #search-focus-overlay.active { opacity: 1; pointer-events: auto; }
 
         aside { width: 320px; min-width: 320px; background: var(--bg-panel); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; padding: 50px 0 20px; z-index: 1000; transition: left 0.4s var(--smooth); }
         .brand { padding: 0 45px 50px; display: flex; align-items: center; gap: 15px; }
@@ -52,7 +55,7 @@
         .user-status { font-size: 0.65rem; color: var(--accent); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 
         /* Main Area & Header */
-        main { flex: 1; position: relative; overflow-y: auto; z-index: 10; scroll-behavior: smooth; }
+        main { flex: 1; position: relative; overflow-y: auto; z-index: 10; scroll-behavior: smooth; min-height: 100dvh; }
         .header-sticky { position: sticky; top: 0; z-index: 900; padding: 25px 60px; background: rgba(2, 4, 8, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); display: flex; gap: 20px; align-items: center; }
         
         #mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 10px; }
@@ -61,8 +64,10 @@
         .search-wrapper { position: relative; flex: 1; max-width: 600px; }
         .search-input { width: 100%; background: rgba(255,255,255,0.05); border: 2px solid var(--glass-border); padding: 16px 25px 16px 60px; border-radius: 18px; color: white; font-size: 1rem; transition: 0.4s; }
         .search-input:focus { border-color: var(--accent); background: #000; box-shadow: 0 0 30px var(--accent-glow); }
+        .search-wrapper.focused { z-index: 950; }
+        .search-wrapper.focused .search-input { border-color: var(--accent); background: #000; box-shadow: 0 0 35px var(--accent-glow); }
 
-        #search-results { position: absolute; top: calc(100% + 10px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; max-height: 400px; overflow-y: auto; display: none; z-index: 2000; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        #search-results { position: absolute; top: calc(100% + 10px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; max-height: 400px; overflow-y: auto; display: none; z-index: 2000; box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: none; }
         .search-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
         .search-item:hover { background: var(--glass-heavy); }
         .search-item img { width: 40px; height: 55px; border-radius: 8px; object-fit: cover; }
@@ -108,7 +113,43 @@
         .picker-item { padding: 16px 20px; background: var(--glass); border-radius: 18px; cursor: pointer; transition: 0.3s; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
         .picker-item:hover { background: var(--glass-heavy); border-color: var(--accent); }
         .picker-item.already-in { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+        .picker-actions { display: flex; align-items: center; gap: 8px; }
+        .picker-delete-btn { width: 32px; height: 32px; border-radius: 10px; border: 1px solid rgba(255, 71, 87, 0.5); background: rgba(255, 71, 87, 0.15); color: #ff6b81; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.25s; }
+        .picker-delete-btn:hover { background: rgba(255, 71, 87, 0.3); transform: scale(1.08); }
         .new-playlist-group { display: flex; gap: 12px; margin-top: 25px; padding-top: 25px; border-top: 1px solid var(--glass-border); }
+
+        .profile-view { display: none; }
+        .profile-shell { display: grid; gap: 20px; }
+        .profile-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 22px; padding: 22px; }
+        .profile-head { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+        .profile-avatar { width: 82px; height: 82px; border-radius: 22px; object-fit: cover; border: 2px solid var(--glass-border); background: #0b1220; }
+        .profile-meta h3 { font-size: 1.5rem; margin-bottom: 4px; }
+        .profile-meta p { color: var(--text-dim); font-size: 0.9rem; }
+        .profile-form { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 15px; }
+        .profile-form .search-input { padding-left: 18px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+        .stat-tile { background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 16px; padding: 14px; }
+        .stat-num { font-family: 'JetBrains Mono'; font-size: 1.4rem; color: var(--accent); font-weight: 800; }
+        .stat-lab { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .profile-bio { margin-top: 12px; color: #cbd5e1; line-height: 1.5; }
+        .profile-row { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .profile-list { display: grid; gap: 10px; max-height: 280px; overflow-y: auto; }
+        .profile-mini { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 14px; padding: 10px 12px; }
+        .profile-mini-main { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+        .profile-mini-avatar { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; background: #0b1220; }
+        .profile-mini-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profile-mini-sub { color: var(--text-dim); font-size: 0.75rem; }
+        .recent-item { border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px; background: rgba(255,255,255,0.02); }
+        .recent-title { font-weight: 700; }
+        .recent-meta { color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; }
+
+        .comments-wrap { margin-top: 30px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px; }
+        .comment-form { display: grid; gap: 10px; margin-bottom: 15px; }
+        .comment-box { width: 100%; min-height: 90px; resize: vertical; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); color: white; border-radius: 12px; padding: 12px; font-family: inherit; }
+        .comments-list { display: grid; gap: 10px; max-height: 260px; overflow-y: auto; }
+        .comment-item { background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px; }
+        .comment-head { display: flex; justify-content: space-between; gap: 10px; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 6px; }
+        .comment-author { color: var(--accent); font-weight: 700; }
 
         .season-accordion { margin-bottom: 15px; border-radius: 20px; overflow: hidden; background: var(--glass); border: 1px solid var(--glass-border); }
         .season-header { padding: 20px 25px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
@@ -132,20 +173,22 @@
 
         /* ================= MOBILE RESPONSIVE LAYOUT ================= */
         @media (max-width: 900px) {
+            :root { --header-h: 76px; }
             aside { position: fixed; left: -320px; top: 0; bottom: 0; box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
             aside.open { left: 0; }
+            #search-focus-overlay { inset: var(--header-h) 0 0 0; }
             
             #mobile-menu-btn { display: block; }
             #mobile-user-badge { display: flex; width: 38px; height: 38px; border-radius: 12px; background: var(--accent); color: black; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; flex-shrink: 0; }
 
-            .header-sticky { padding: 15px 20px; gap: 12px; }
+            .header-sticky { padding: calc(12px + env(safe-area-inset-top)) 16px 12px; gap: 10px; }
             .search-input { padding: 14px 20px 14px 45px; font-size: 0.9rem; }
             .search-wrapper i { left: 15px; }
             #stats-counter { display: none; }
 
-            .viewport-content { padding: 25px 20px; }
-            #view-title { font-size: 2.2rem; margin-bottom: 25px; }
-            .media-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+            .viewport-content { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); }
+            #view-title { font-size: clamp(1.8rem, 8vw, 2.2rem); margin-bottom: 20px; }
+            .media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
             
             .card-actions { opacity: 1; transform: scale(0.85); top: 5px; right: 5px; transform-origin: top right; }
             .card-ratings-wrapper { transform: scale(0.85); top: 5px; left: 5px; transform-origin: top left; }
@@ -154,15 +197,39 @@
             .modal-surface { flex-direction: column; height: 100vh; border-radius: 0; border: none; }
             .modal-close-btn { top: 15px; right: 15px; background: rgba(0,0,0,0.8); }
             
-            .modal-hero { width: 100%; height: 65% ; flex-shrink 0;}
+            .modal-hero { width: 100%; height: 55vh; max-height: 55vh; flex-shrink: 0; }
             .modal-scrollable { width: 100%; height: 100%; padding: 30px 20px; }
-            #m-title { font-size: 2.2rem; }
+            #m-title { font-size: clamp(1.8rem, 8vw, 2.2rem); }
             
             #playlist-picker { padding: 15px; }
             .picker-surface { padding: 25px; border-radius: 25px; }
 
             .auth-card { padding: 35px 25px; }
             .user-identity { margin: 10px 15px; padding: 15px; }
+            .profile-avatar { width: 68px; height: 68px; border-radius: 16px; }
+        }
+
+        @media (max-width: 680px) {
+            aside { width: min(86vw, 320px); min-width: min(86vw, 320px); }
+            .media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+            .pagination { gap: 10px; }
+            .page-btn { padding: 10px 16px; }
+            .modal-scrollable { padding: 24px 16px; }
+            .picker-surface { padding: 20px; border-radius: 20px; }
+        }
+
+        @media (max-width: 420px) {
+            .search-input { font-size: 0.85rem; border-radius: 14px; }
+            .media-grid { gap: 10px; }
+            .poster-wrapper { border-radius: 16px; }
+            .action-btn { width: 34px; height: 34px; }
+            .rating-tag { font-size: 0.62rem; padding: 4px 8px; }
+            .picker-item { padding: 13px 14px; font-size: 0.9rem; }
+            .picker-delete-btn { width: 30px; height: 30px; }
+        }
+
+        @media (max-height: 740px) and (max-width: 900px) {
+            .modal-hero { height: 42vh; max-height: 42vh; }
         }
     </style>
 </head>
@@ -182,6 +249,7 @@
 <div id="app-canvas"></div>
 
 <div id="sidebar-overlay" onclick="Core.toggleSidebar(false)"></div>
+<div id="search-focus-overlay" onclick="Core.endSearchFocus()"></div>
 
 <aside id="main-sidebar">
     <div class="brand">
@@ -195,6 +263,7 @@
         <div class="nav-link" data-view="Serials" onclick="Core.navigate('Serials', this)"><i class="fa-solid fa-tv"></i> Seriály</div>
         <div class="nav-link" data-view="Anime" onclick="Core.navigate('Anime', this)"><i class="fa-solid fa-ghost"></i> Anime</div>
         <div class="nav-link" data-view="favorites" onclick="Core.navigate('favorites', this)"><i class="fa-solid fa-heart" style="color:var(--c-fav)"></i> Oblíbené</div>
+        <div class="nav-link" data-view="profile" onclick="Core.navigate('profile', this)"><i class="fa-solid fa-user"></i> Profil</div>
         
         <div class="nav-label">Moje Seznamy <i class="fa-solid fa-plus" style="cursor:pointer" onclick="Core.addPlaylistPrompt()"></i></div>
         <div id="sidebar-playlists"></div>
@@ -220,7 +289,7 @@
         <div class="search-wrapper">
             <i class="fa-solid fa-search" style="position: absolute; left: 25px; top: 50%; transform: translateY(-50%); color: var(--text-dim);"></i>
             <input type="text" id="global-search" class="search-input" placeholder="Hledat..." 
-                   oninput="Core.handleSearch(this.value)" onfocus="Core.handleSearch(this.value)" onblur="setTimeout(() => document.getElementById('search-results').style.display='none', 200)">
+                   oninput="Core.handleSearch(this.value)" onfocus="Core.startSearchFocus(); Core.handleSearch(this.value)" onblur="setTimeout(() => Core.endSearchFocus(), 180)">
             <div id="search-results"></div>
         </div>
         <div id="mobile-user-badge">?</div>
@@ -230,11 +299,54 @@
     <div class="viewport-content">
         <h2 id="view-title" style="font-size: 3rem; font-weight: 900; margin-bottom: 40px; letter-spacing: -2px;">Všechno</h2>
         <div class="media-grid" id="main-grid"></div>
-        <div class="pagination">
+        <div class="pagination" id="main-pagination">
             <button class="page-btn" id="prev-btn" onclick="Core.changePage(-1)">Zpět</button>
             <div id="page-info" style="font-family: 'JetBrains Mono'; color: var(--accent);">1 / 1</div>
             <button class="page-btn" id="next-btn" onclick="Core.changePage(1)">Další</button>
         </div>
+
+        <section id="profile-view" class="profile-view">
+            <div class="profile-shell">
+                <div class="profile-card">
+                    <div class="profile-head">
+                        <img id="profile-avatar-preview" class="profile-avatar" src="" alt="avatar">
+                        <div class="profile-meta">
+                            <h3 id="profile-nickname-view">Uživatel</h3>
+                            <p>Sdílený profil sledování a komentářů</p>
+                        </div>
+                    </div>
+                    <div class="profile-form">
+                        <input id="profile-nickname-input" class="search-input" type="text" placeholder="Nickname">
+                        <input id="profile-avatar-input" class="search-input" type="url" placeholder="URL profilovky (https://...)">
+                        <input id="profile-bio-input" class="search-input" type="text" placeholder="Bio / něco o sobě">
+                    </div>
+                    <button class="page-btn" style="margin-top:12px" onclick="Core.saveProfile()">Uložit profil</button>
+                    <p id="profile-bio-view" class="profile-bio"></p>
+                </div>
+
+                <div class="profile-card">
+                    <div class="nav-label" style="margin:0 0 12px 0">Statistiky sledování</div>
+                    <div class="stat-grid" id="profile-stats-grid"></div>
+                </div>
+
+                <div class="profile-row">
+                    <div class="profile-card">
+                        <div class="nav-label" style="margin:0 0 12px 0">Posledních 5 zhlédnutých</div>
+                        <div id="profile-recent-watched" class="profile-list"></div>
+                    </div>
+                    <div class="profile-card">
+                        <div class="nav-label" style="margin:0 0 12px 0">Poslední recenze</div>
+                        <div id="profile-recent-reviews" class="profile-list"></div>
+                    </div>
+                </div>
+
+                <div class="profile-card">
+                    <div class="nav-label" style="margin:0 0 12px 0">Komunitní profily</div>
+                    <div id="community-profiles-list" class="profile-list"></div>
+                    <button class="page-btn" style="margin-top:12px" onclick="Core.openProfile(Core.state.user?.uid)">Zpět na můj profil</button>
+                </div>
+            </div>
+        </section>
     </div>
 </main>
 
@@ -256,6 +368,14 @@
             <div class="star-container" id="m-stars"></div>
             <p id="m-desc" style="color: #94a3b8; line-height: 1.6; margin-bottom: 30px;"></p>
             <div id="m-content-root"></div>
+            <div class="comments-wrap">
+                <div class="nav-label" style="margin:0 0 12px 0">Komentáře komunity</div>
+                <div class="comment-form">
+                    <textarea id="comment-input" class="comment-box" placeholder="Napiš komentář k tomuto titulu..."></textarea>
+                    <button class="page-btn" style="width:max-content" onclick="Core.postComment()">Přidat komentář</button>
+                </div>
+                <div id="comments-list" class="comments-list"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -281,7 +401,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, getDocs, collection, onSnapshot, addDoc, query, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCKDEC_0krG_OqfBuqd6vV2L2ixWDrWMZM",
@@ -296,16 +416,12 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    window.FB = { auth, db, doc, setDoc, getDoc, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
+    window.FB = { auth, db, doc, setDoc, getDoc, getDocs, collection, onSnapshot, addDoc, query, where, orderBy, limit, serverTimestamp, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             // Update User Badge UI
             const email = user.email || "Uživatel";
-            const initial = email.charAt(0).toUpperCase();
-            document.getElementById('pc-user-email').innerText = email;
-            document.getElementById('pc-user-initials').innerText = initial;
-            document.getElementById('mobile-user-badge').innerText = initial;
 
             const snap = await getDoc(doc(db, "users", user.uid));
             if (snap.exists()) {
@@ -314,9 +430,24 @@
                     fav: data.fav || [], 
                     episodes: data.episodes || [], 
                     ratings: data.ratings || {}, 
-                    playlists: data.playlists || {} 
+                    playlists: data.playlists || {},
+                    watchedLog: data.watchedLog || []
                 };
+                Core.state.profile.nickname = data.profile?.nickname || email.split('@')[0] || 'Uživatel';
+                Core.state.profile.avatar = data.profile?.avatar || '';
+                Core.state.profile.bio = data.profile?.bio || '';
+            } else {
+                Core.state.profile.nickname = email.split('@')[0] || 'Uživatel';
+                Core.state.profile.avatar = '';
+                Core.state.profile.bio = '';
             }
+            const displayName = Core.state.profile.nickname || 'Uživatel';
+            const initial = displayName.charAt(0).toUpperCase();
+            document.getElementById('pc-user-email').innerText = displayName;
+            document.getElementById('pc-user-initials').innerText = initial;
+            document.getElementById('mobile-user-badge').innerText = initial;
+            Core.state.user = { uid: user.uid, email };
+            Core.state.activeProfileUid = user.uid;
             document.getElementById('auth-overlay').style.display = 'none';
             onSnapshot(collection(db, "global_ratings"), (snapshot) => {
                 let ratingsData = {};
@@ -334,13 +465,26 @@
 <script>
     window.Core = {
         state: {
-            db: { fav: [], episodes: [], ratings: {}, playlists: {} },
+            db: { fav: [], episodes: [], ratings: {}, playlists: {}, watchedLog: [] },
+            profile: { nickname: 'Uživatel', avatar: '', bio: '' },
+            user: null,
             globalRatings: {}, 
             view: 'all', query: '', page: 1, perPage: 20, activeItem: null,
-            searchTimeout: null, pendingMediaId: null
+            searchTimeout: null, pendingMediaId: null, searchFocused: false,
+            commentsUnsub: null,
+            publicProfiles: [],
+            activeProfileUid: null,
+            profileRecentReviews: []
         },
 
-        async init() { this.syncPlaylists(); this.renderGrid(); },
+        async init() {
+            this.syncPlaylists();
+            this.subscribeProfiles();
+            this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
+            await this.loadUserRecentReviews(this.state.activeProfileUid);
+            this.renderProfile();
+            this.renderGrid();
+        },
 
         toggleSidebar(f) {
             const s = document.getElementById('main-sidebar'), o = document.getElementById('sidebar-overlay');
@@ -351,7 +495,8 @@
 
         async save() {
             if (FB.auth.currentUser) {
-                try { await FB.setDoc(FB.doc(FB.db, "users", FB.auth.currentUser.uid), this.state.db); } 
+                const payload = { ...this.state.db, profile: this.state.profile };
+                try { await FB.setDoc(FB.doc(FB.db, "users", FB.auth.currentUser.uid), payload); } 
                 catch(e) { console.error("Save failed:", e); }
             }
         },
@@ -359,7 +504,7 @@
         handleAuth() {
             const email = document.getElementById('auth-email').value, pass = document.getElementById('auth-pass').value;
             const isReg = document.getElementById('auth-title').innerText === 'Registrace';
-            if(isReg) FB.createUserWithEmailAndPassword(FB.auth, email, pass).then(r => FB.setDoc(FB.doc(FB.db, "users", r.user.uid), this.state.db)).catch(e => alert(e.message));
+            if(isReg) FB.createUserWithEmailAndPassword(FB.auth, email, pass).then(r => FB.setDoc(FB.doc(FB.db, "users", r.user.uid), { ...this.state.db, profile: this.state.profile })).catch(e => alert(e.message));
             else FB.signInWithEmailAndPassword(FB.auth, email, pass).catch(e => alert(e.message));
         },
 
@@ -376,16 +521,199 @@
             this.state.view = view; this.state.page = 1;
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
             if(el) el.classList.add('active');
-            let label = view === 'all' ? 'Všechno' : (view === 'favorites' ? 'Oblíbené' : (this.state.db.playlists[view] ? `Seznam: ${view}` : view));
+            let label = view === 'all' ? 'Všechno' : (view === 'favorites' ? 'Oblíbené' : (view === 'profile' ? 'Profil uživatele' : (this.state.db.playlists[view] ? `Seznam: ${view}` : view)));
             document.getElementById('view-title').innerText = label;
+            if (view === 'profile') this.openProfile(this.state.activeProfileUid || this.state.user?.uid);
             this.renderGrid();
+            this.endSearchFocus();
             if (window.innerWidth <= 900) this.toggleSidebar(false);
+        },
+
+        getMediaById(id) {
+            return mediaData.find(x => x.id.toString() === id.toString());
+        },
+
+        getWatchedCategoryCount(cat) {
+            const watchedIds = new Set();
+            this.state.db.episodes.forEach(uid => {
+                const raw = uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0];
+                watchedIds.add(raw.toString());
+            });
+            let count = 0;
+            watchedIds.forEach(id => {
+                const item = this.getMediaById(id);
+                if (item && item.cat === cat) count += 1;
+            });
+            return count;
+        },
+
+        subscribeProfiles() {
+            FB.onSnapshot(FB.query(FB.collection(FB.db, 'users'), FB.limit(60)), (snap) => {
+                this.state.publicProfiles = snap.docs.map(d => {
+                    const data = d.data() || {};
+                    return {
+                        uid: d.id,
+                        nickname: data.profile?.nickname || 'Uživatel',
+                        avatar: data.profile?.avatar || '',
+                        bio: data.profile?.bio || '',
+                        watchedLog: data.watchedLog || [],
+                        episodes: data.episodes || []
+                    };
+                });
+                if (this.state.view === 'profile') this.renderProfile();
+            });
+        },
+
+        async openProfile(uid) {
+            this.state.activeProfileUid = uid || this.state.user?.uid;
+            await this.loadUserRecentReviews(this.state.activeProfileUid);
+            this.renderProfile();
+        },
+
+        async loadUserRecentReviews(uid) {
+            if (!uid) return;
+            const collected = [];
+            const subset = mediaData.slice(0, 60);
+            for (const item of subset) {
+                try {
+                    const q = FB.query(
+                        FB.collection(FB.db, `comments_${item.id}`),
+                        FB.where('uid', '==', uid),
+                        FB.orderBy('createdAt', 'desc'),
+                        FB.limit(2)
+                    );
+                    const snap = await FB.getDocs(q);
+                    snap.forEach(d => {
+                        const c = d.data();
+                        collected.push({
+                            text: c.text || '',
+                            mediaTitle: c.mediaTitle || item.title,
+                            mediaCat: c.mediaCat || item.cat,
+                            createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : 0
+                        });
+                    });
+                } catch (_) {}
+            }
+            this.state.profileRecentReviews = collected.sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
+        },
+
+        renderProfile() {
+            const ownUid = this.state.user?.uid;
+            const viewedUid = this.state.activeProfileUid || ownUid;
+            const external = this.state.publicProfiles.find(p => p.uid === viewedUid);
+            const isOwn = !viewedUid || viewedUid === ownUid;
+            const sourceProfile = isOwn ? { ...this.state.profile, episodes: this.state.db.episodes, watchedLog: this.state.db.watchedLog } : external;
+            const nick = sourceProfile?.nickname || 'Uživatel';
+            const avatar = sourceProfile?.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(nick) + '&background=0f172a&color=38bdf8&bold=true';
+            const bio = sourceProfile?.bio || 'Bez bio.';
+            const episodes = sourceProfile?.episodes || [];
+            const watchedLog = (sourceProfile?.watchedLog || []).slice().sort((a,b) => (b.at||0)-(a.at||0));
+            const watchedTitles = new Set(episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0])).size;
+
+            document.getElementById('profile-nickname-view').innerText = isOwn ? `${nick} (Ty)` : nick;
+            document.getElementById('profile-nickname-input').value = isOwn ? nick : '';
+            document.getElementById('profile-avatar-input').value = isOwn ? (this.state.profile.avatar || '') : '';
+            document.getElementById('profile-bio-input').value = isOwn ? (this.state.profile.bio || '') : '';
+            document.getElementById('profile-avatar-preview').src = avatar;
+            document.getElementById('profile-bio-view').innerText = bio;
+            document.getElementById('pc-user-email').innerText = nick;
+            document.getElementById('pc-user-initials').innerText = nick.charAt(0).toUpperCase();
+            document.getElementById('mobile-user-badge').innerText = nick.charAt(0).toUpperCase();
+
+            document.getElementById('profile-nickname-input').disabled = !isOwn;
+            document.getElementById('profile-avatar-input').disabled = !isOwn;
+            document.getElementById('profile-bio-input').disabled = !isOwn;
+
+            const ids = new Set(episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0]));
+            let movieCount = 0, serialCount = 0, animeCount = 0;
+            ids.forEach(id => {
+                const item = this.getMediaById(id);
+                if (!item) return;
+                if (item.cat === 'Movie') movieCount += 1;
+                if (item.cat === 'Serials') serialCount += 1;
+                if (item.cat === 'Anime') animeCount += 1;
+            });
+            const topCat = [['Filmy', movieCount], ['Seriály', serialCount], ['Anime', animeCount]].sort((a,b) => b[1]-a[1])[0];
+            document.getElementById('profile-stats-grid').innerHTML = `
+                <div class="stat-tile"><div class="stat-num">${watchedTitles}</div><div class="stat-lab">Zhlédnuté tituly</div></div>
+                <div class="stat-tile"><div class="stat-num">${movieCount}</div><div class="stat-lab">Filmy</div></div>
+                <div class="stat-tile"><div class="stat-num">${serialCount}</div><div class="stat-lab">Seriály</div></div>
+                <div class="stat-tile"><div class="stat-num">${animeCount}</div><div class="stat-lab">Anime</div></div>
+                <div class="stat-tile"><div class="stat-num">${topCat[0]}</div><div class="stat-lab">Nejvíc sleduje</div></div>
+            `;
+
+            document.getElementById('profile-recent-watched').innerHTML = watchedLog.slice(0, 5).map(w => `
+                <div class="recent-item">
+                    <div class="recent-title">${w.title || 'Titul'}</div>
+                    <div class="recent-meta">${w.cat || '-'} • ${new Date(w.at || Date.now()).toLocaleString('cs-CZ')}</div>
+                </div>
+            `).join('') || `<div style="color:var(--text-dim)">Zatím nic nezhlédnuto.</div>`;
+
+            document.getElementById('profile-recent-reviews').innerHTML = this.state.profileRecentReviews.map(r => `
+                <div class="recent-item">
+                    <div class="recent-title">${r.mediaTitle}</div>
+                    <div>${(r.text || '').slice(0, 140)}</div>
+                    <div class="recent-meta">${r.mediaCat || ''}</div>
+                </div>
+            `).join('') || `<div style="color:var(--text-dim)">Žádné recenze.</div>`;
+
+            document.getElementById('community-profiles-list').innerHTML = this.state.publicProfiles
+                .filter(p => p.uid !== viewedUid)
+                .slice(0, 20)
+                .map(p => {
+                    const pav = p.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nickname || 'U') + '&background=0f172a&color=38bdf8&bold=true';
+                    return `
+                    <div class="profile-mini">
+                        <div class="profile-mini-main">
+                            <img class="profile-mini-avatar" src="${pav}" alt="avatar">
+                            <div>
+                                <div class="profile-mini-name">${p.nickname || 'Uživatel'}</div>
+                                <div class="profile-mini-sub">${(p.bio || 'Bez bio').slice(0, 48)}</div>
+                            </div>
+                        </div>
+                        <button class="page-btn" style="padding:8px 12px" onclick="Core.openProfile('${p.uid}')">Navštívit</button>
+                    </div>`;
+                }).join('') || `<div style="color:var(--text-dim)">Žádné profily.</div>`;
+        },
+
+        async saveProfile() {
+            const nick = document.getElementById('profile-nickname-input').value.trim();
+            const avatar = document.getElementById('profile-avatar-input').value.trim();
+            const bio = document.getElementById('profile-bio-input').value.trim();
+            if (!nick) return alert('Nickname je povinný.');
+            this.state.profile.nickname = nick;
+            this.state.profile.avatar = avatar;
+            this.state.profile.bio = bio;
+            await this.save();
+            this.state.activeProfileUid = this.state.user?.uid || null;
+            await this.loadUserRecentReviews(this.state.activeProfileUid);
+            this.renderProfile();
+            alert('Profil uložen.');
+        },
+
+        startSearchFocus() {
+            this.state.searchFocused = true;
+            const wrapper = document.querySelector('.search-wrapper');
+            const overlay = document.getElementById('search-focus-overlay');
+            if (wrapper) wrapper.classList.add('focused');
+            if (overlay) overlay.classList.add('active');
+        },
+
+        endSearchFocus() {
+            this.state.searchFocused = false;
+            const wrapper = document.querySelector('.search-wrapper');
+            const overlay = document.getElementById('search-focus-overlay');
+            const dropdown = document.getElementById('search-results');
+            if (wrapper) wrapper.classList.remove('focused');
+            if (overlay) overlay.classList.remove('active');
+            if (dropdown) dropdown.style.display = 'none';
         },
 
         handleSearch(v) {
             this.state.query = v;
             const dropdown = document.getElementById('search-results');
             if(v.length > 1) {
+                this.startSearchFocus();
                 const matches = mediaData.filter(m => m.title.toLowerCase().includes(v.toLowerCase())).slice(0, 5);
                 if(matches.length > 0) {
                     dropdown.style.display = 'block';
@@ -398,7 +726,9 @@
                             </div>
                         </div>`).join('');
                 } else dropdown.style.display = 'none';
-            } else dropdown.style.display = 'none';
+            } else if (!this.state.searchFocused) {
+                dropdown.style.display = 'none';
+            }
             clearTimeout(this.state.searchTimeout);
             this.state.searchTimeout = setTimeout(() => { this.state.page = 1; this.renderGrid(); }, 300);
         },
@@ -416,21 +746,32 @@
         openPlaylistPicker(e, id) {
             e.stopPropagation();
             this.state.pendingMediaId = id.toString();
-            const picker = document.getElementById('playlist-picker'), list = document.getElementById('picker-list-content');
+            this.renderPlaylistPickerList();
+            document.getElementById('playlist-picker').style.display = 'flex';
+        },
+
+        renderPlaylistPickerList() {
+            const id = this.state.pendingMediaId;
+            const list = document.getElementById('picker-list-content');
             const playlists = Object.keys(this.state.db.playlists);
+            if (!id) return;
             if (playlists.length === 0) {
                 list.innerHTML = `<div style="text-align:center; color:var(--text-dim); padding:20px;">Žádné seznamy.</div>`;
-            } else {
-                list.innerHTML = playlists.map(p => {
-                    const isAlreadyIn = this.state.db.playlists[p].includes(id.toString());
-                    return `
-                        <div class="picker-item ${isAlreadyIn ? 'already-in' : ''}" onclick="${isAlreadyIn ? '' : `Core.confirmAddToPlaylist('${p}')`}">
-                            <span><i class="fa-solid fa-list-ul" style="margin-right:12px; color:var(--accent)"></i> ${p}</span>
-                            ${isAlreadyIn ? '<i class="fa-solid fa-check" style="color:var(--accent)"></i>' : ''}
-                        </div>`;
-                }).join('');
+                return;
             }
-            picker.style.display = 'flex';
+            list.innerHTML = playlists.map(p => {
+                const isAlreadyIn = this.state.db.playlists[p].includes(id.toString());
+                return `
+                    <div class="picker-item ${isAlreadyIn ? 'already-in' : ''}" onclick="${isAlreadyIn ? '' : `Core.confirmAddToPlaylist('${p}')`}">
+                        <span><i class="fa-solid fa-list-ul" style="margin-right:12px; color:var(--accent)"></i> ${p}</span>
+                        <span class="picker-actions">
+                            ${isAlreadyIn ? '<i class="fa-solid fa-check" style="color:var(--accent)"></i>' : ''}
+                            <button class="picker-delete-btn" onclick="Core.deletePlaylistFromPicker(event, '${p}')" title="Smazat playlist">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </span>
+                    </div>`;
+            }).join('');
         },
 
         async confirmAddToPlaylist(name) {
@@ -451,6 +792,18 @@
             }
         },
 
+        async deletePlaylistFromPicker(e, n) {
+            e.stopPropagation();
+            if(confirm(`Smazat playlist "${n}"?`)) {
+                delete this.state.db.playlists[n];
+                if(this.state.view === n) this.state.view = 'all';
+                await this.save();
+                this.syncPlaylists();
+                this.renderGrid();
+                this.renderPlaylistPickerList();
+            }
+        },
+
         closePicker() { document.getElementById('playlist-picker').style.display = 'none'; this.state.pendingMediaId = null; },
 
         addPlaylistPrompt() {
@@ -468,6 +821,20 @@
         },
 
         renderGrid() {
+            const profileView = document.getElementById('profile-view');
+            const mainGrid = document.getElementById('main-grid');
+            const pagination = document.getElementById('main-pagination');
+            if (this.state.view === 'profile') {
+                profileView.style.display = 'block';
+                mainGrid.style.display = 'none';
+                pagination.style.display = 'none';
+                this.renderProfile();
+                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `PROFIL`;
+                return;
+            }
+            profileView.style.display = 'none';
+            mainGrid.style.display = 'grid';
+            pagination.style.display = 'flex';
             const grid = document.getElementById('main-grid');
             const items = mediaData.filter(i => {
                 const m = i.title.toLowerCase().includes(this.state.query.toLowerCase());
@@ -519,7 +886,53 @@
             document.getElementById('m-desc').innerText = item.overview || 'Bez popisu.';
             document.getElementById('m-cat').innerText = `${item.cat} • ${item.year || '?'}`;
             this.updateModalProgress(); this.renderStars(id); this.renderContent(item);
+            this.bindComments(id);
+            this.endSearchFocus();
             document.getElementById('modal-engine').style.display = 'flex';
+        },
+
+        bindComments(id) {
+            if (this.state.commentsUnsub) this.state.commentsUnsub();
+            const q = FB.query(FB.collection(FB.db, `comments_${id}`), FB.orderBy('createdAt', 'desc'), FB.limit(100));
+            this.state.commentsUnsub = FB.onSnapshot(q, (snap) => {
+                const list = document.getElementById('comments-list');
+                if (snap.empty) {
+                    list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Zatím bez komentářů.</div>`;
+                    return;
+                }
+                list.innerHTML = snap.docs.map(d => {
+                    const c = d.data();
+                    const dt = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString('cs-CZ') : 'teď';
+                    const uid = c.uid ? `<button class="page-btn" style="padding:6px 10px" onclick="Core.navigate('profile'); Core.openProfile('${c.uid}')">Profil</button>` : '';
+                    return `<div class="comment-item"><div class="comment-head"><span class="comment-author">${c.author || 'Uživatel'}</span><span>${dt}</span>${uid}</div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
+                }).join('');
+            });
+        },
+
+        async postComment() {
+            if (!this.state.activeItem) return;
+            const input = document.getElementById('comment-input');
+            const text = input.value.trim();
+            if (!text) return;
+            const nick = this.state.profile.nickname || this.state.user?.email?.split('@')[0] || 'Uživatel';
+            try {
+                await FB.addDoc(FB.collection(FB.db, `comments_${this.state.activeItem.id}`), {
+                    text,
+                    author: nick,
+                    uid: this.state.user?.uid || null,
+                    mediaTitle: this.state.activeItem.title || '',
+                    mediaCat: this.state.activeItem.cat || '',
+                    createdAt: FB.serverTimestamp()
+                });
+                input.value = '';
+                if (this.state.user?.uid && this.state.view === 'profile') {
+                    await this.loadUserRecentReviews(this.state.activeProfileUid || this.state.user.uid);
+                    this.renderProfile();
+                }
+            } catch (e) {
+                console.error('Comment send failed', e);
+                alert('Komentář se nepodařilo odeslat. Zkus to znovu.');
+            }
         },
 
         updateModalProgress() {
@@ -584,7 +997,17 @@
 
         toggleEp(uid, el) {
             const idx = this.state.db.episodes.indexOf(uid);
+            const nowWatched = idx === -1;
             if(idx > -1) this.state.db.episodes.splice(idx, 1); else this.state.db.episodes.push(uid);
+            if (nowWatched) {
+                const mediaId = uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0];
+                const item = this.getMediaById(mediaId);
+                if (item) {
+                    this.state.db.watchedLog = (this.state.db.watchedLog || []).filter(w => w.id?.toString() !== item.id.toString());
+                    this.state.db.watchedLog.unshift({ id: item.id.toString(), title: item.title, cat: item.cat, at: Date.now() });
+                    this.state.db.watchedLog = this.state.db.watchedLog.slice(0, 120);
+                }
+            }
             this.save(); this.updateModalProgress(); this.renderGrid();
             if(el.tagName === 'BUTTON') el.innerText = this.state.db.episodes.includes(uid) ? 'ZHLÉDNUTO ✓' : 'OZNAČIT JAKO VIDĚNÉ';
             else el.classList.toggle('watched');
@@ -606,7 +1029,14 @@
                 </div>`).join('');
         },
 
-        closeModal() { document.getElementById('modal-engine').style.display = 'none'; }
+        closeModal() {
+            document.getElementById('modal-engine').style.display = 'none';
+            this.endSearchFocus();
+            if (this.state.commentsUnsub) {
+                this.state.commentsUnsub();
+                this.state.commentsUnsub = null;
+            }
+        }
     };
 </script>
 </body>
