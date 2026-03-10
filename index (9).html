@@ -18,6 +18,7 @@
             --spring: cubic-bezier(0.34, 1.56, 0.64, 1); --smooth: cubic-bezier(0.4, 0, 0.2, 1);
             --c-anime: #f43f5e; --c-star: #fbbf24; --c-fav: #ff4757;
             --header-h: 98px;
+            --search-overlay-top: calc(var(--header-h) + 84px);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
@@ -32,7 +33,7 @@
         /* Sidebar Navigation */
         #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 990; backdrop-filter: blur(5px); transition: 0.3s; opacity: 0; }
         #sidebar-overlay.active { display: block; opacity: 1; }
-        #search-focus-overlay { position: fixed; inset: var(--header-h) 0 0 320px; z-index: 850; background: rgba(2, 5, 12, 0.82); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transition: opacity 0.25s var(--smooth); }
+        #search-focus-overlay { position: fixed; inset: var(--search-overlay-top) 0 0 320px; z-index: 700; background: rgba(2, 5, 12, 0.82); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transition: opacity 0.25s var(--smooth); }
         #search-focus-overlay.active { opacity: 1; pointer-events: auto; }
 
         aside { width: 320px; min-width: 320px; background: var(--bg-panel); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; padding: 50px 0 20px; z-index: 1000; transition: left 0.4s var(--smooth); }
@@ -64,10 +65,10 @@
         .search-wrapper { position: relative; flex: 1; max-width: 600px; }
         .search-input { width: 100%; background: rgba(255,255,255,0.05); border: 2px solid var(--glass-border); padding: 16px 25px 16px 60px; border-radius: 18px; color: white; font-size: 1rem; transition: 0.4s; }
         .search-input:focus { border-color: var(--accent); background: #000; box-shadow: 0 0 30px var(--accent-glow); }
-        .search-wrapper.focused { z-index: 950; }
+        .search-wrapper.focused { z-index: 3200; }
         .search-wrapper.focused .search-input { border-color: var(--accent); background: #000; box-shadow: 0 0 35px var(--accent-glow); }
 
-        #search-results { position: absolute; top: calc(100% + 10px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; max-height: 400px; overflow-y: auto; display: none; z-index: 2000; box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: none; }
+        #search-results { position: absolute; top: calc(100% + 10px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; max-height: 400px; overflow-y: auto; display: none; z-index: 4200; box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: none; }
         .search-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
         .search-item:hover { background: var(--glass-heavy); }
         .search-item img { width: 40px; height: 55px; border-radius: 8px; object-fit: cover; }
@@ -120,7 +121,7 @@
 
         .profile-view { display: none; }
         .profile-shell { display: grid; gap: 20px; }
-        .profile-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 22px; padding: 22px; }
+        .profile-card { background: linear-gradient(165deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)); border: 1px solid var(--glass-border); border-radius: 22px; padding: 22px; box-shadow: 0 18px 35px rgba(0,0,0,0.25); }
         .profile-head { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
         .profile-avatar { width: 82px; height: 82px; border-radius: 22px; object-fit: cover; border: 2px solid var(--glass-border); background: #0b1220; }
         .profile-meta h3 { font-size: 1.5rem; margin-bottom: 4px; }
@@ -173,7 +174,7 @@
 
         /* ================= MOBILE RESPONSIVE LAYOUT ================= */
         @media (max-width: 900px) {
-            :root { --header-h: 76px; }
+            :root { --header-h: 76px; --search-overlay-top: calc(var(--header-h) + 74px); }
             aside { position: fixed; left: -320px; top: 0; bottom: 0; box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
             aside.open { left: 0; }
             #search-focus-overlay { inset: var(--header-h) 0 0 0; }
@@ -572,29 +573,37 @@
 
         async loadUserRecentReviews(uid) {
             if (!uid) return;
-            const collected = [];
-            const subset = mediaData.slice(0, 60);
-            for (const item of subset) {
-                try {
-                    const q = FB.query(
-                        FB.collection(FB.db, `comments_${item.id}`),
-                        FB.where('uid', '==', uid),
-                        FB.orderBy('createdAt', 'desc'),
-                        FB.limit(2)
-                    );
-                    const snap = await FB.getDocs(q);
-                    snap.forEach(d => {
-                        const c = d.data();
-                        collected.push({
-                            text: c.text || '',
-                            mediaTitle: c.mediaTitle || item.title,
-                            mediaCat: c.mediaCat || item.cat,
-                            createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : 0
-                        });
+            try {
+                const snap = await FB.getDocs(FB.query(FB.collection(FB.db, 'comments'), FB.where('uid', '==', uid), FB.limit(80)));
+                const collected = [];
+                snap.forEach(d => {
+                    const c = d.data() || {};
+                    collected.push({
+                        text: c.text || '',
+                        mediaTitle: c.mediaTitle || 'Titul',
+                        mediaCat: c.mediaCat || '',
+                        createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : 0
                     });
-                } catch (_) {}
+                });
+                this.state.profileRecentReviews = collected.sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
+            } catch (e) {
+                console.error('loadUserRecentReviews failed', e);
+                this.state.profileRecentReviews = [];
             }
-            this.state.profileRecentReviews = collected.sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
+        },
+
+        buildRecommendationScore(item) {
+            let score = 0;
+            const rated = this.state.db.ratings[item.id] || 0;
+            if (rated > 0) score += rated * 4;
+            const watchedIds = new Set(this.state.db.episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0]));
+            if (!watchedIds.has(item.id.toString())) score += 20;
+            const catPref = this.getWatchedCategoryCount(item.cat);
+            score += catPref * 3;
+            if (this.state.db.fav.includes(item.id.toString())) score += 10;
+            const global = this.state.globalRatings[item.id?.toString()];
+            if (global && global.count > 0) score += (global.sum / global.count);
+            return score;
         },
 
         renderProfile() {
@@ -836,13 +845,14 @@
             mainGrid.style.display = 'grid';
             pagination.style.display = 'flex';
             const grid = document.getElementById('main-grid');
-            const items = mediaData.filter(i => {
+            let items = mediaData.filter(i => {
                 const m = i.title.toLowerCase().includes(this.state.query.toLowerCase());
                 if (this.state.view === 'all') return m;
                 if (this.state.view === 'favorites') return m && this.state.db.fav.includes(i.id.toString());
                 if (this.state.db.playlists[this.state.view]) return m && this.state.db.playlists[this.state.view].includes(i.id.toString());
                 return m && i.cat === this.state.view;
             });
+            if (this.state.view === 'all') items = items.sort((a, b) => this.buildRecommendationScore(b) - this.buildRecommendationScore(a));
             const totalPages = Math.ceil(items.length / this.state.perPage) || 1;
             const slice = items.slice((this.state.page - 1) * this.state.perPage, this.state.page * this.state.perPage);
             document.getElementById('page-info').innerText = `${this.state.page} / ${totalPages}`;
@@ -893,11 +903,11 @@
 
         bindComments(id) {
             if (this.state.commentsUnsub) this.state.commentsUnsub();
-            const q = FB.query(FB.collection(FB.db, `comments_${id}`), FB.orderBy('createdAt', 'desc'), FB.limit(100));
+            const q = FB.query(FB.collection(FB.db, 'comments'), FB.where('mediaId', '==', id.toString()), FB.orderBy('createdAt', 'desc'), FB.limit(100));
             this.state.commentsUnsub = FB.onSnapshot(q, (snap) => {
                 const list = document.getElementById('comments-list');
                 if (snap.empty) {
-                    list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Zatím bez komentářů.</div>`;
+                    this.loadCommentsFallback(id);
                     return;
                 }
                 list.innerHTML = snap.docs.map(d => {
@@ -906,7 +916,28 @@
                     const uid = c.uid ? `<button class="page-btn" style="padding:6px 10px" onclick="Core.navigate('profile'); Core.openProfile('${c.uid}')">Profil</button>` : '';
                     return `<div class="comment-item"><div class="comment-head"><span class="comment-author">${c.author || 'Uživatel'}</span><span>${dt}</span>${uid}</div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
                 }).join('');
+            }, () => {
+                this.loadCommentsFallback(id);
             });
+        },
+
+        async loadCommentsFallback(id) {
+            const list = document.getElementById('comments-list');
+            try {
+                const snap = await FB.getDoc(FB.doc(FB.db, 'global_ratings', id.toString()));
+                const data = snap.exists() ? snap.data() : {};
+                const arr = (data.commentsFallback || []).slice(0, 100);
+                if (!arr.length) {
+                    list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Zatím bez komentářů.</div>`;
+                    return;
+                }
+                list.innerHTML = arr.map(c => {
+                    const dt = c.createdAt ? new Date(c.createdAt).toLocaleString('cs-CZ') : 'teď';
+                    return `<div class="comment-item"><div class="comment-head"><span class="comment-author">${c.author || 'Uživatel'}</span><span>${dt}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
+                }).join('');
+            } catch (_) {
+                list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Komentáře nejsou dostupné.</div>`;
+            }
         },
 
         async postComment() {
@@ -916,10 +947,11 @@
             if (!text) return;
             const nick = this.state.profile.nickname || this.state.user?.email?.split('@')[0] || 'Uživatel';
             try {
-                await FB.addDoc(FB.collection(FB.db, `comments_${this.state.activeItem.id}`), {
+                await FB.addDoc(FB.collection(FB.db, 'comments'), {
                     text,
                     author: nick,
                     uid: this.state.user?.uid || null,
+                    mediaId: this.state.activeItem.id?.toString() || '',
                     mediaTitle: this.state.activeItem.title || '',
                     mediaCat: this.state.activeItem.cat || '',
                     createdAt: FB.serverTimestamp()
@@ -930,8 +962,28 @@
                     this.renderProfile();
                 }
             } catch (e) {
-                console.error('Comment send failed', e);
-                alert('Komentář se nepodařilo odeslat. Zkus to znovu.');
+                try {
+                    const statsRef = FB.doc(FB.db, 'global_ratings', this.state.activeItem.id.toString());
+                    const snap = await FB.getDoc(statsRef);
+                    const data = snap.exists() ? snap.data() : { sum: 0, count: 0 };
+                    const commentsFallback = Array.isArray(data.commentsFallback) ? data.commentsFallback : [];
+                    commentsFallback.unshift({
+                        text,
+                        author: nick,
+                        uid: this.state.user?.uid || null,
+                        mediaId: this.state.activeItem.id?.toString() || '',
+                        mediaTitle: this.state.activeItem.title || '',
+                        mediaCat: this.state.activeItem.cat || '',
+                        createdAt: Date.now()
+                    });
+                    data.commentsFallback = commentsFallback.slice(0, 200);
+                    await FB.setDoc(statsRef, data);
+                    input.value = '';
+                    await this.loadCommentsFallback(this.state.activeItem.id);
+                } catch (_) {
+                    console.error('Comment send failed', e);
+                    alert('Komentář se nepodařilo odeslat. Zkus to znovu.');
+                }
             }
         },
 
