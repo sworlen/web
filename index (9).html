@@ -513,10 +513,13 @@
             recoCache: { watchedIds: new Set(), catPref: { Movie:0, Serials:0, Anime:0 } },
             allReviews: [],
             communityProfileQuery: '',
-            profileReviewsUnsub: null
+            profileReviewsUnsub: null,
+            mediaById: new Map(),
+            mediaRecords: []
         },
 
         async init() {
+            this.prepareMediaCache();
             this.syncPlaylists();
             this.subscribeProfiles();
             this.subscribeAllReviews();
@@ -571,7 +574,44 @@
         },
 
         getMediaById(id) {
-            return mediaData.find(x => x.id.toString() === id.toString());
+            return this.state.mediaById.get(id?.toString()) || null;
+        },
+
+        prepareMediaCache() {
+            if (this.state.mediaRecords.length > 0) return;
+            this.state.mediaRecords = (mediaData || []).map(item => ({
+                ...item,
+                _id: item.id?.toString(),
+                _qTitle: this.normalizeText(item.title || '')
+            }));
+            this.state.mediaById = new Map(this.state.mediaRecords.map(item => [item._id, item]));
+        },
+
+        normalizeText(v) {
+            return (v || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        },
+
+        isMediaWatched(mediaId) {
+            const key = mediaId?.toString();
+            if (!key) return false;
+            return this.state.db.episodes.some(uid => {
+                const raw = uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0];
+                return raw.toString() === key;
+            });
+        },
+
+        syncWatchedLogEntry(mediaId, bumpTs = false) {
+            const key = mediaId?.toString();
+            const item = this.getMediaById(key);
+            if (!key || !item) return;
+            const current = Array.isArray(this.state.db.watchedLog) ? this.state.db.watchedLog : [];
+            const existing = current.find(w => w.id?.toString() === key);
+            const filtered = current.filter(w => w.id?.toString() !== key);
+            if (this.isMediaWatched(key)) {
+                const at = bumpTs ? Date.now() : (existing?.at || Date.now());
+                filtered.unshift({ id: key, title: item.title, cat: item.cat, at });
+            }
+            this.state.db.watchedLog = filtered.slice(0, 120);
         },
 
         getWatchedCategoryCount(cat) {
@@ -589,7 +629,7 @@
         },
 
         subscribeProfiles() {
-            FB.onSnapshot(FB.query(FB.collection(FB.db, 'users'), FB.limit(60)), (snap) => {
+            FB.onSnapshot(FB.query(FB.collection(FB.db, 'users'), FB.limit(300)), (snap) => {
                 this.state.publicProfiles = snap.docs.map(d => {
                     const data = d.data() || {};
                     return {
@@ -606,7 +646,7 @@
         },
 
         handleCommunityProfileSearch(v) {
-            this.state.communityProfileQuery = (v || '').trim().toLowerCase();
+            this.state.communityProfileQuery = this.normalizeText(v || '');
             if (this.state.view === 'profile') this.renderProfile();
         },
 
@@ -717,7 +757,7 @@
             const avatar = sourceProfile?.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(nick) + '&background=0f172a&color=38bdf8&bold=true';
             const bio = sourceProfile?.bio || 'Bez bio.';
             const episodes = sourceProfile?.episodes || [];
-            const watchedLog = (sourceProfile?.watchedLog || []).slice().sort((a,b) => (b.at||0)-(a.at||0));
+            const watchedLog = (sourceProfile?.watchedLog || []).slice();
             const watchedTitles = new Set(episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0])).size;
 
             document.getElementById('profile-nickname-view').innerText = isOwn ? `${nick} (Ty)` : nick;
@@ -751,7 +791,16 @@
                 <div class="stat-tile"><div class="stat-num">${topCat[0]}</div><div class="stat-lab">Nejvíc sleduje</div></div>
             `;
 
-            document.getElementById('profile-recent-watched').innerHTML = watchedLog.slice(0, 5).map(w => `
+            const fullWatchedLog = watchedLog.slice();
+            ids.forEach(id => {
+                if (!fullWatchedLog.some(w => w.id?.toString() === id.toString())) {
+                    const item = this.getMediaById(id);
+                    if (item) fullWatchedLog.push({ id: item.id.toString(), title: item.title, cat: item.cat, at: Date.now() - 1 });
+                }
+            });
+            const orderedWatchedLog = fullWatchedLog.sort((a,b) => (b.at||0)-(a.at||0));
+
+            document.getElementById('profile-recent-watched').innerHTML = orderedWatchedLog.slice(0, 5).map(w => `
                 <div class="recent-item">
                     <div class="recent-title">${w.title || 'Titul'}</div>
                     <div class="recent-meta">${w.cat || '-'} • ${new Date(w.at || Date.now()).toLocaleString('cs-CZ')}</div>
@@ -780,7 +829,12 @@
             const q = this.state.communityProfileQuery || '';
             document.getElementById('community-profiles-list').innerHTML = this.state.publicProfiles
                 .filter(p => p.uid !== viewedUid)
-                .filter(p => !q || (p.nickname || '').toLowerCase().includes(q))
+                .filter(p => {
+                    if (!q) return true;
+                    const n = this.normalizeText(p.nickname || '');
+                    const b = this.normalizeText(p.bio || '');
+                    return n.includes(q) || b.includes(q);
+                })
                 .slice(0, 20)
                 .map(p => {
                     const pav = p.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nickname || 'U') + '&background=0f172a&color=38bdf8&bold=true';
@@ -861,9 +915,11 @@
             this.state.searchFocused = true;
             const wrapper = document.querySelector('.search-wrapper');
             const overlay = document.getElementById('search-focus-overlay');
+            const q = document.getElementById('global-search')?.value || '';
             this.updateSearchOverlayTop();
             if (wrapper) wrapper.classList.add('focused');
             if (overlay) overlay.classList.add('active');
+            this.renderSearchDropdown(q);
         },
 
         endSearchFocus() {
@@ -883,36 +939,61 @@
             this.endSearchFocus();
         },
 
+        renderSearchDropdown(rawQuery) {
+            const dropdown = document.getElementById('search-results');
+            if (!dropdown) return;
+            const q = this.normalizeText(rawQuery);
+            const hasQuery = q.length > 0;
+
+            const matchedMedia = (hasQuery ? this.state.mediaRecords.filter(m => m._qTitle.includes(q)) : []).slice(0, 5);
+            const matchedUsers = this.state.publicProfiles
+                .filter(p => {
+                    if (!hasQuery) return true;
+                    const n = this.normalizeText(p.nickname || '');
+                    const b = this.normalizeText(p.bio || '');
+                    return n.includes(q) || b.includes(q);
+                })
+                .slice(0, hasQuery ? 6 : 10);
+
+            if (matchedMedia.length === 0 && matchedUsers.length === 0) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            const mediaHtml = matchedMedia.map(m => `
+                <div class="search-item" onclick="Core.openModal('${m.id}')">
+                    <img src="${m.image}">
+                    <div>
+                        <div style="font-weight:700; font-size:0.9rem">${m.title}</div>
+                        <div style="font-size:0.7rem; color:var(--accent)">${m.cat} • ${m.year}</div>
+                    </div>
+                </div>`).join('');
+
+            const usersLabel = `<div style="padding:10px 20px 6px; font-size:0.68rem; font-weight:800; letter-spacing:1.3px; color:var(--text-dim); text-transform:uppercase;">Komunitní profily</div>`;
+            const userHtml = matchedUsers.map(u => {
+                const av = u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.nickname || 'U') + '&background=0f172a&color=38bdf8&bold=true';
+                return `
+                <div class="search-item" onclick="Core.openProfileFromSearch('${u.uid}')">
+                    <img src="${av}">
+                    <div>
+                        <div style="font-weight:700; font-size:0.9rem">${u.nickname || 'Uživatel'}</div>
+                        <div style="font-size:0.7rem; color:var(--accent)">${u.bio ? u.bio.slice(0, 44) : 'Komunitní profil'}</div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            dropdown.innerHTML = mediaHtml + usersLabel + userHtml;
+            dropdown.style.display = 'block';
+        },
+
         handleSearch(v) {
             this.state.query = v;
             const dropdown = document.getElementById('search-results');
             if(v.length > 1) {
                 this.startSearchFocus();
-                const matches = mediaData.filter(m => m.title.toLowerCase().includes(v.toLowerCase())).slice(0, 5);
-                const users = this.state.publicProfiles.filter(p => (p.nickname || '').toLowerCase().includes(v.toLowerCase())).slice(0, 4);
-                if(matches.length > 0 || users.length > 0) {
-                    dropdown.style.display = 'block';
-                    const mediaHtml = matches.map(m => `
-                        <div class=\"search-item\" onclick=\"Core.openModal('${m.id}')\">
-                            <img src=\"${m.image}\">
-                            <div>
-                                <div style=\"font-weight:700; font-size:0.9rem\">${m.title}</div>
-                                <div style=\"font-size:0.7rem; color:var(--accent)\">${m.cat} • ${m.year}</div>
-                            </div>
-                        </div>`).join('');
-                    const userHtml = users.map(u => {
-                        const av = u.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.nickname || 'U') + '&background=0f172a&color=38bdf8&bold=true';
-                        return `
-                        <div class=\"search-item\" onclick=\"Core.openProfileFromSearch('${u.uid}')\">
-                            <img src=\"${av}\">
-                            <div>
-                                <div style=\"font-weight:700; font-size:0.9rem\">${u.nickname || 'Uživatel'}</div>
-                                <div style=\"font-size:0.7rem; color:var(--accent)\">Uživatel</div>
-                            </div>
-                        </div>`;
-                    }).join('');
-                    dropdown.innerHTML = mediaHtml + userHtml;
-                } else dropdown.style.display = 'none';
+                this.renderSearchDropdown(v);
+            } else if (this.state.searchFocused && v.length === 0) {
+                this.renderSearchDropdown('');
             } else if (!this.state.searchFocused) {
                 dropdown.style.display = 'none';
             }
@@ -1044,8 +1125,9 @@
             mainGrid.style.display = 'grid';
             pagination.style.display = 'flex';
             const grid = document.getElementById('main-grid');
-            let items = mediaData.filter(i => {
-                const m = i.title.toLowerCase().includes(this.state.query.toLowerCase());
+            const q = this.normalizeText(this.state.query);
+            let items = this.state.mediaRecords.filter(i => {
+                const m = i._qTitle.includes(q);
                 if (this.state.view === 'all') return m;
                 if (this.state.view === 'favorites') return m && this.state.db.fav.includes(i.id.toString());
                 if (this.state.db.playlists[this.state.view]) return m && this.state.db.playlists[this.state.view].includes(i.id.toString());
@@ -1112,7 +1194,9 @@
 
 
         openModal(id) {
-            const item = mediaData.find(x => x.id == id); this.state.activeItem = item;
+            const item = this.getMediaById(id);
+            if (!item) return;
+            this.state.activeItem = item;
             document.getElementById('m-hero').style.backgroundImage = `url(${item.image})`;
             document.getElementById('m-title').innerText = item.title;
             document.getElementById('m-desc').innerText = item.overview || 'Bez popisu.';
@@ -1304,17 +1388,9 @@
 
         toggleEp(uid, el) {
             const idx = this.state.db.episodes.indexOf(uid);
-            const nowWatched = idx === -1;
             if(idx > -1) this.state.db.episodes.splice(idx, 1); else this.state.db.episodes.push(uid);
-            if (nowWatched) {
-                const mediaId = uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0];
-                const item = this.getMediaById(mediaId);
-                if (item) {
-                    this.state.db.watchedLog = (this.state.db.watchedLog || []).filter(w => w.id?.toString() !== item.id.toString());
-                    this.state.db.watchedLog.unshift({ id: item.id.toString(), title: item.title, cat: item.cat, at: Date.now() });
-                    this.state.db.watchedLog = this.state.db.watchedLog.slice(0, 120);
-                }
-            }
+            const mediaId = uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0];
+            this.syncWatchedLogEntry(mediaId, idx === -1);
             this.save(); this.updateModalProgress(); this.renderGrid();
             if(el.tagName === 'BUTTON') el.innerText = this.state.db.episodes.includes(uid) ? 'ZHLÉDNUTO ✓' : 'OZNAČIT JAKO VIDĚNÉ';
             else el.classList.toggle('watched');
