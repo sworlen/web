@@ -220,6 +220,29 @@
         @media (max-height: 740px) and (max-width: 900px) {
             .modal-hero { height: 42vh; max-height: 42vh; }
         }
+
+        @media (max-width: 680px) {
+            aside { width: min(86vw, 320px); min-width: min(86vw, 320px); }
+            .media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+            .pagination { gap: 10px; }
+            .page-btn { padding: 10px 16px; }
+            .modal-scrollable { padding: 24px 16px; }
+            .picker-surface { padding: 20px; border-radius: 20px; }
+        }
+
+        @media (max-width: 420px) {
+            .search-input { font-size: 0.85rem; border-radius: 14px; }
+            .media-grid { gap: 10px; }
+            .poster-wrapper { border-radius: 16px; }
+            .action-btn { width: 34px; height: 34px; }
+            .rating-tag { font-size: 0.62rem; padding: 4px 8px; }
+            .picker-item { padding: 13px 14px; font-size: 0.9rem; }
+            .picker-delete-btn { width: 30px; height: 30px; }
+        }
+
+        @media (max-height: 740px) and (max-width: 900px) {
+            .modal-hero { height: 42vh; max-height: 42vh; }
+        }
     </style>
 </head>
 <body>
