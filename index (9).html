@@ -24,13 +24,15 @@
         ::-webkit-scrollbar-thumb { background: var(--glass-heavy); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-        body { font-family: 'Outfit', sans-serif; background-color: var(--bg-deep); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+        body { font-family: 'Outfit', sans-serif; background-color: var(--bg-deep); color: var(--text-main); min-height: 100vh; min-height: 100dvh; height: 100dvh; display: flex; overflow: hidden; }
 
         #app-canvas { position: fixed; inset: -100px; z-index: -1; background-size: cover; background-position: center; filter: blur(80px) brightness(0.12) saturate(1.8); transition: background-image 1.5s var(--smooth); transform: scale(1.1); }
         
         /* Sidebar Navigation */
         #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 990; backdrop-filter: blur(5px); transition: 0.3s; opacity: 0; }
         #sidebar-overlay.active { display: block; opacity: 1; }
+        #search-focus-overlay { position: fixed; inset: 0 0 0 320px; z-index: 850; background: rgba(2, 5, 12, 0.82); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transition: opacity 0.25s var(--smooth); }
+        #search-focus-overlay.active { opacity: 1; pointer-events: auto; }
 
         aside { width: 320px; min-width: 320px; background: var(--bg-panel); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; padding: 50px 0 20px; z-index: 1000; transition: left 0.4s var(--smooth); }
         .brand { padding: 0 45px 50px; display: flex; align-items: center; gap: 15px; }
@@ -52,7 +54,7 @@
         .user-status { font-size: 0.65rem; color: var(--accent); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 
         /* Main Area & Header */
-        main { flex: 1; position: relative; overflow-y: auto; z-index: 10; scroll-behavior: smooth; }
+        main { flex: 1; position: relative; overflow-y: auto; z-index: 10; scroll-behavior: smooth; min-height: 100dvh; }
         .header-sticky { position: sticky; top: 0; z-index: 900; padding: 25px 60px; background: rgba(2, 4, 8, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); display: flex; gap: 20px; align-items: center; }
         
         #mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 10px; }
@@ -61,6 +63,8 @@
         .search-wrapper { position: relative; flex: 1; max-width: 600px; }
         .search-input { width: 100%; background: rgba(255,255,255,0.05); border: 2px solid var(--glass-border); padding: 16px 25px 16px 60px; border-radius: 18px; color: white; font-size: 1rem; transition: 0.4s; }
         .search-input:focus { border-color: var(--accent); background: #000; box-shadow: 0 0 30px var(--accent-glow); }
+        .search-wrapper.focused { z-index: 950; }
+        .search-wrapper.focused .search-input { border-color: var(--accent); background: #000; box-shadow: 0 0 35px var(--accent-glow); }
 
         #search-results { position: absolute; top: calc(100% + 10px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; max-height: 400px; overflow-y: auto; display: none; z-index: 2000; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
         .search-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
@@ -108,6 +112,9 @@
         .picker-item { padding: 16px 20px; background: var(--glass); border-radius: 18px; cursor: pointer; transition: 0.3s; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
         .picker-item:hover { background: var(--glass-heavy); border-color: var(--accent); }
         .picker-item.already-in { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+        .picker-actions { display: flex; align-items: center; gap: 8px; }
+        .picker-delete-btn { width: 32px; height: 32px; border-radius: 10px; border: 1px solid rgba(255, 71, 87, 0.5); background: rgba(255, 71, 87, 0.15); color: #ff6b81; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.25s; }
+        .picker-delete-btn:hover { background: rgba(255, 71, 87, 0.3); transform: scale(1.08); }
         .new-playlist-group { display: flex; gap: 12px; margin-top: 25px; padding-top: 25px; border-top: 1px solid var(--glass-border); }
 
         .season-accordion { margin-bottom: 15px; border-radius: 20px; overflow: hidden; background: var(--glass); border: 1px solid var(--glass-border); }
@@ -134,18 +141,19 @@
         @media (max-width: 900px) {
             aside { position: fixed; left: -320px; top: 0; bottom: 0; box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
             aside.open { left: 0; }
+            #search-focus-overlay { inset: 0; }
             
             #mobile-menu-btn { display: block; }
             #mobile-user-badge { display: flex; width: 38px; height: 38px; border-radius: 12px; background: var(--accent); color: black; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; flex-shrink: 0; }
 
-            .header-sticky { padding: 15px 20px; gap: 12px; }
+            .header-sticky { padding: calc(12px + env(safe-area-inset-top)) 16px 12px; gap: 10px; }
             .search-input { padding: 14px 20px 14px 45px; font-size: 0.9rem; }
             .search-wrapper i { left: 15px; }
             #stats-counter { display: none; }
 
-            .viewport-content { padding: 25px 20px; }
-            #view-title { font-size: 2.2rem; margin-bottom: 25px; }
-            .media-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+            .viewport-content { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); }
+            #view-title { font-size: clamp(1.8rem, 8vw, 2.2rem); margin-bottom: 20px; }
+            .media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
             
             .card-actions { opacity: 1; transform: scale(0.85); top: 5px; right: 5px; transform-origin: top right; }
             .card-ratings-wrapper { transform: scale(0.85); top: 5px; left: 5px; transform-origin: top left; }
@@ -154,15 +162,38 @@
             .modal-surface { flex-direction: column; height: 100vh; border-radius: 0; border: none; }
             .modal-close-btn { top: 15px; right: 15px; background: rgba(0,0,0,0.8); }
             
-            .modal-hero { width: 100%; height: 65% ; flex-shrink 0;}
+            .modal-hero { width: 100%; height: 55vh; max-height: 55vh; flex-shrink: 0; }
             .modal-scrollable { width: 100%; height: 100%; padding: 30px 20px; }
-            #m-title { font-size: 2.2rem; }
+            #m-title { font-size: clamp(1.8rem, 8vw, 2.2rem); }
             
             #playlist-picker { padding: 15px; }
             .picker-surface { padding: 25px; border-radius: 25px; }
 
             .auth-card { padding: 35px 25px; }
             .user-identity { margin: 10px 15px; padding: 15px; }
+        }
+
+        @media (max-width: 680px) {
+            aside { width: min(86vw, 320px); min-width: min(86vw, 320px); }
+            .media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+            .pagination { gap: 10px; }
+            .page-btn { padding: 10px 16px; }
+            .modal-scrollable { padding: 24px 16px; }
+            .picker-surface { padding: 20px; border-radius: 20px; }
+        }
+
+        @media (max-width: 420px) {
+            .search-input { font-size: 0.85rem; border-radius: 14px; }
+            .media-grid { gap: 10px; }
+            .poster-wrapper { border-radius: 16px; }
+            .action-btn { width: 34px; height: 34px; }
+            .rating-tag { font-size: 0.62rem; padding: 4px 8px; }
+            .picker-item { padding: 13px 14px; font-size: 0.9rem; }
+            .picker-delete-btn { width: 30px; height: 30px; }
+        }
+
+        @media (max-height: 740px) and (max-width: 900px) {
+            .modal-hero { height: 42vh; max-height: 42vh; }
         }
     </style>
 </head>
@@ -182,6 +213,7 @@
 <div id="app-canvas"></div>
 
 <div id="sidebar-overlay" onclick="Core.toggleSidebar(false)"></div>
+<div id="search-focus-overlay" onclick="Core.endSearchFocus()"></div>
 
 <aside id="main-sidebar">
     <div class="brand">
@@ -220,7 +252,7 @@
         <div class="search-wrapper">
             <i class="fa-solid fa-search" style="position: absolute; left: 25px; top: 50%; transform: translateY(-50%); color: var(--text-dim);"></i>
             <input type="text" id="global-search" class="search-input" placeholder="Hledat..." 
-                   oninput="Core.handleSearch(this.value)" onfocus="Core.handleSearch(this.value)" onblur="setTimeout(() => document.getElementById('search-results').style.display='none', 200)">
+                   oninput="Core.handleSearch(this.value)" onfocus="Core.startSearchFocus(); Core.handleSearch(this.value)" onblur="setTimeout(() => Core.endSearchFocus(), 180)">
             <div id="search-results"></div>
         </div>
         <div id="mobile-user-badge">?</div>
@@ -337,7 +369,7 @@
             db: { fav: [], episodes: [], ratings: {}, playlists: {} },
             globalRatings: {}, 
             view: 'all', query: '', page: 1, perPage: 20, activeItem: null,
-            searchTimeout: null, pendingMediaId: null
+            searchTimeout: null, pendingMediaId: null, searchFocused: false
         },
 
         async init() { this.syncPlaylists(); this.renderGrid(); },
@@ -379,13 +411,33 @@
             let label = view === 'all' ? 'Všechno' : (view === 'favorites' ? 'Oblíbené' : (this.state.db.playlists[view] ? `Seznam: ${view}` : view));
             document.getElementById('view-title').innerText = label;
             this.renderGrid();
+            this.endSearchFocus();
             if (window.innerWidth <= 900) this.toggleSidebar(false);
+        },
+
+        startSearchFocus() {
+            this.state.searchFocused = true;
+            const wrapper = document.querySelector('.search-wrapper');
+            const overlay = document.getElementById('search-focus-overlay');
+            if (wrapper) wrapper.classList.add('focused');
+            if (overlay) overlay.classList.add('active');
+        },
+
+        endSearchFocus() {
+            this.state.searchFocused = false;
+            const wrapper = document.querySelector('.search-wrapper');
+            const overlay = document.getElementById('search-focus-overlay');
+            const dropdown = document.getElementById('search-results');
+            if (wrapper) wrapper.classList.remove('focused');
+            if (overlay) overlay.classList.remove('active');
+            if (dropdown) dropdown.style.display = 'none';
         },
 
         handleSearch(v) {
             this.state.query = v;
             const dropdown = document.getElementById('search-results');
             if(v.length > 1) {
+                this.startSearchFocus();
                 const matches = mediaData.filter(m => m.title.toLowerCase().includes(v.toLowerCase())).slice(0, 5);
                 if(matches.length > 0) {
                     dropdown.style.display = 'block';
@@ -398,7 +450,9 @@
                             </div>
                         </div>`).join('');
                 } else dropdown.style.display = 'none';
-            } else dropdown.style.display = 'none';
+            } else if (!this.state.searchFocused) {
+                dropdown.style.display = 'none';
+            }
             clearTimeout(this.state.searchTimeout);
             this.state.searchTimeout = setTimeout(() => { this.state.page = 1; this.renderGrid(); }, 300);
         },
@@ -416,21 +470,32 @@
         openPlaylistPicker(e, id) {
             e.stopPropagation();
             this.state.pendingMediaId = id.toString();
-            const picker = document.getElementById('playlist-picker'), list = document.getElementById('picker-list-content');
+            this.renderPlaylistPickerList();
+            document.getElementById('playlist-picker').style.display = 'flex';
+        },
+
+        renderPlaylistPickerList() {
+            const id = this.state.pendingMediaId;
+            const list = document.getElementById('picker-list-content');
             const playlists = Object.keys(this.state.db.playlists);
+            if (!id) return;
             if (playlists.length === 0) {
                 list.innerHTML = `<div style="text-align:center; color:var(--text-dim); padding:20px;">Žádné seznamy.</div>`;
-            } else {
-                list.innerHTML = playlists.map(p => {
-                    const isAlreadyIn = this.state.db.playlists[p].includes(id.toString());
-                    return `
-                        <div class="picker-item ${isAlreadyIn ? 'already-in' : ''}" onclick="${isAlreadyIn ? '' : `Core.confirmAddToPlaylist('${p}')`}">
-                            <span><i class="fa-solid fa-list-ul" style="margin-right:12px; color:var(--accent)"></i> ${p}</span>
-                            ${isAlreadyIn ? '<i class="fa-solid fa-check" style="color:var(--accent)"></i>' : ''}
-                        </div>`;
-                }).join('');
+                return;
             }
-            picker.style.display = 'flex';
+            list.innerHTML = playlists.map(p => {
+                const isAlreadyIn = this.state.db.playlists[p].includes(id.toString());
+                return `
+                    <div class="picker-item ${isAlreadyIn ? 'already-in' : ''}" onclick="${isAlreadyIn ? '' : `Core.confirmAddToPlaylist('${p}')`}">
+                        <span><i class="fa-solid fa-list-ul" style="margin-right:12px; color:var(--accent)"></i> ${p}</span>
+                        <span class="picker-actions">
+                            ${isAlreadyIn ? '<i class="fa-solid fa-check" style="color:var(--accent)"></i>' : ''}
+                            <button class="picker-delete-btn" onclick="Core.deletePlaylistFromPicker(event, '${p}')" title="Smazat playlist">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </span>
+                    </div>`;
+            }).join('');
         },
 
         async confirmAddToPlaylist(name) {
@@ -448,6 +513,18 @@
                 await this.save(); this.syncPlaylists();
                 if (this.state.pendingMediaId) await this.confirmAddToPlaylist(name);
                 input.value = '';
+            }
+        },
+
+        async deletePlaylistFromPicker(e, n) {
+            e.stopPropagation();
+            if(confirm(`Smazat playlist "${n}"?`)) {
+                delete this.state.db.playlists[n];
+                if(this.state.view === n) this.state.view = 'all';
+                await this.save();
+                this.syncPlaylists();
+                this.renderGrid();
+                this.renderPlaylistPickerList();
             }
         },
 
@@ -519,6 +596,7 @@
             document.getElementById('m-desc').innerText = item.overview || 'Bez popisu.';
             document.getElementById('m-cat').innerText = `${item.cat} • ${item.year || '?'}`;
             this.updateModalProgress(); this.renderStars(id); this.renderContent(item);
+            this.endSearchFocus();
             document.getElementById('modal-engine').style.display = 'flex';
         },
 
@@ -606,7 +684,7 @@
                 </div>`).join('');
         },
 
-        closeModal() { document.getElementById('modal-engine').style.display = 'none'; }
+        closeModal() { document.getElementById('modal-engine').style.display = 'none'; this.endSearchFocus(); }
     };
 </script>
 </body>
