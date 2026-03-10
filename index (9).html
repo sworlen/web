@@ -351,6 +351,7 @@
 
                 <div class="profile-card">
                     <div class="nav-label" style="margin:0 0 12px 0">Komunitní profily</div>
+                    <input id="community-profile-search" class="search-input" type="text" placeholder="Hledat podle nickname..." style="padding-left:18px; margin-bottom:12px" oninput="Core.handleCommunityProfileSearch(this.value)">
                     <div id="community-profiles-list" class="profile-list"></div>
                     <button class="page-btn" style="margin-top:12px" onclick="Core.openProfile(Core.state.user?.uid)">Zpět na můj profil</button>
                 </div>
@@ -503,7 +504,9 @@
             activeProfileUid: null,
             profileRecentReviews: [],
             recoCache: { watchedIds: new Set(), catPref: { Movie:0, Serials:0, Anime:0 } },
-            allReviews: []
+            allReviews: [],
+            communityProfileQuery: '',
+            profileReviewsUnsub: null
         },
 
         async init() {
@@ -595,6 +598,11 @@
             });
         },
 
+        handleCommunityProfileSearch(v) {
+            this.state.communityProfileQuery = (v || '').trim().toLowerCase();
+            if (this.state.view === 'profile') this.renderProfile();
+        },
+
         subscribeAllReviews() {
             FB.onSnapshot(FB.query(FB.collection(FB.db, 'comments'), FB.orderBy('createdAt', 'desc'), FB.limit(200)), (snap) => {
                 this.state.allReviews = snap.docs.map(d => {
@@ -609,8 +617,52 @@
 
         async openProfile(uid) {
             this.state.activeProfileUid = uid || this.state.user?.uid;
+            await this.fetchProfileFromDb(this.state.activeProfileUid);
+            this.bindProfileReviews(this.state.activeProfileUid);
             await this.loadUserRecentReviews(this.state.activeProfileUid);
             this.renderProfile();
+        },
+
+        async fetchProfileFromDb(uid) {
+            if (!uid) return;
+            try {
+                const snap = await FB.getDoc(FB.doc(FB.db, 'users', uid));
+                if (!snap.exists()) return;
+                const data = snap.data() || {};
+                const entry = {
+                    uid,
+                    nickname: data.profile?.nickname || 'Uživatel',
+                    avatar: data.profile?.avatar || '',
+                    bio: data.profile?.bio || '',
+                    watchedLog: data.watchedLog || [],
+                    episodes: data.episodes || []
+                };
+                const idx = this.state.publicProfiles.findIndex(p => p.uid === uid);
+                if (idx > -1) this.state.publicProfiles[idx] = entry;
+                else this.state.publicProfiles.unshift(entry);
+            } catch (e) {
+                console.error('fetchProfileFromDb failed', e);
+            }
+        },
+
+        bindProfileReviews(uid) {
+            if (this.state.profileReviewsUnsub) this.state.profileReviewsUnsub();
+            if (!uid) return;
+            this.state.profileReviewsUnsub = FB.onSnapshot(
+                FB.query(FB.collection(FB.db, 'comments'), FB.where('uid', '==', uid), FB.orderBy('createdAt', 'desc'), FB.limit(80)),
+                (snap) => {
+                    this.state.profileRecentReviews = snap.docs.map(d => {
+                        const c = d.data() || {};
+                        return {
+                            text: c.text || '',
+                            mediaTitle: c.mediaTitle || 'Titul',
+                            mediaCat: c.mediaCat || '',
+                            createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : 0
+                        };
+                    });
+                    if (this.state.view === 'profile') this.renderProfile();
+                }
+            );
         },
 
         async loadUserRecentReviews(uid) {
@@ -718,8 +770,10 @@
                 </div>`).join('') || `<div style=\"color:var(--text-dim)\">Bez dalších recenzí.</div>`}
             `;
 
+            const q = this.state.communityProfileQuery || '';
             document.getElementById('community-profiles-list').innerHTML = this.state.publicProfiles
                 .filter(p => p.uid !== viewedUid)
+                .filter(p => !q || (p.nickname || '').toLowerCase().includes(q))
                 .slice(0, 20)
                 .map(p => {
                     const pav = p.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nickname || 'U') + '&background=0f172a&color=38bdf8&bold=true';
