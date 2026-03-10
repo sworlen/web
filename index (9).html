@@ -33,7 +33,7 @@
         /* Sidebar Navigation */
         #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 990; backdrop-filter: blur(5px); transition: 0.3s; opacity: 0; }
         #sidebar-overlay.active { display: block; opacity: 1; }
-        #search-focus-overlay { position: fixed; inset: var(--search-overlay-top) 0 0 320px; z-index: 700; background: rgba(2, 5, 12, 0.82); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transition: opacity 0.25s var(--smooth); }
+        #search-focus-overlay { position: fixed; inset: var(--search-overlay-top) 0 0 320px; z-index: 8; background: rgba(2, 5, 12, 0.82); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transition: opacity 0.25s var(--smooth); }
         #search-focus-overlay.active { opacity: 1; pointer-events: auto; }
 
         aside { width: 320px; min-width: 320px; background: var(--bg-panel); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; padding: 50px 0 20px; z-index: 1000; transition: left 0.4s var(--smooth); }
@@ -150,7 +150,13 @@
         .comments-list { display: grid; gap: 10px; max-height: 260px; overflow-y: auto; }
         .comment-item { background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px; }
         .comment-head { display: flex; justify-content: space-between; gap: 10px; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 6px; }
-        .comment-author { color: var(--accent); font-weight: 700; }
+         .comment-author { color: var(--accent); font-weight: 700; }
+        .header-profile-btn { background: transparent; border: 1px solid var(--glass-border); color: white; border-radius: 14px; height: 44px; padding: 0 10px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+        .header-profile-avatar { width: 28px; height: 28px; border-radius: 10px; object-fit: cover; background: #111827; }
+        .review-tools { display: flex; gap: 8px; align-items: center; }
+        #playlist-create-modal { position: fixed; inset: 0; z-index: 25000; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; }
+        .playlist-create-box { width: 100%; max-width: 420px; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 24px; padding: 22px; }
+
 
         .season-accordion { margin-bottom: 15px; border-radius: 20px; overflow: hidden; background: var(--glass); border: 1px solid var(--glass-border); }
         .season-header { padding: 20px 25px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
@@ -177,15 +183,16 @@
             :root { --header-h: 76px; --search-overlay-top: calc(var(--header-h) + 74px); }
             aside { position: fixed; left: -320px; top: 0; bottom: 0; box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
             aside.open { left: 0; }
-            #search-focus-overlay { inset: var(--header-h) 0 0 0; }
+            #search-focus-overlay { inset: var(--search-overlay-top) 0 0 0; }
             
             #mobile-menu-btn { display: block; }
-            #mobile-user-badge { display: flex; width: 38px; height: 38px; border-radius: 12px; background: var(--accent); color: black; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; flex-shrink: 0; }
+            #mobile-user-badge { display: none; }
 
             .header-sticky { padding: calc(12px + env(safe-area-inset-top)) 16px 12px; gap: 10px; }
             .search-input { padding: 14px 20px 14px 45px; font-size: 0.9rem; }
             .search-wrapper i { left: 15px; }
             #stats-counter { display: none; }
+            .header-profile-btn span { display: none; }
 
             .viewport-content { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); }
             #view-title { font-size: clamp(1.8rem, 8vw, 2.2rem); margin-bottom: 20px; }
@@ -266,7 +273,7 @@
         <div class="nav-link" data-view="favorites" onclick="Core.navigate('favorites', this)"><i class="fa-solid fa-heart" style="color:var(--c-fav)"></i> Oblíbené</div>
         <div class="nav-link" data-view="profile" onclick="Core.navigate('profile', this)"><i class="fa-solid fa-user"></i> Profil</div>
         
-        <div class="nav-label">Moje Seznamy <i class="fa-solid fa-plus" style="cursor:pointer" onclick="Core.addPlaylistPrompt()"></i></div>
+        <div class="nav-label">Moje Seznamy <i class="fa-solid fa-plus" style="cursor:pointer" onclick="Core.openPlaylistCreateModal()"></i></div>
         <div id="sidebar-playlists"></div>
         
         <div class="nav-label">Systém</div>
@@ -293,7 +300,10 @@
                    oninput="Core.handleSearch(this.value)" onfocus="Core.startSearchFocus(); Core.handleSearch(this.value)" onblur="setTimeout(() => Core.endSearchFocus(), 180)">
             <div id="search-results"></div>
         </div>
-        <div id="mobile-user-badge">?</div>
+        <button class="header-profile-btn" onclick="Core.openOwnProfile()">
+            <img id="header-profile-avatar" class="header-profile-avatar" src="" alt="avatar">
+            <span>Profil</span>
+        </button>
         <div id="stats-counter" style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.8rem; white-space: nowrap;">0 TITULŮ</div>
     </header>
 
@@ -370,10 +380,10 @@
             <p id="m-desc" style="color: #94a3b8; line-height: 1.6; margin-bottom: 30px;"></p>
             <div id="m-content-root"></div>
             <div class="comments-wrap">
-                <div class="nav-label" style="margin:0 0 12px 0">Komentáře komunity</div>
+                <div class="nav-label" style="margin:0 0 12px 0">Recenze komunity</div>
                 <div class="comment-form">
-                    <textarea id="comment-input" class="comment-box" placeholder="Napiš komentář k tomuto titulu..."></textarea>
-                    <button class="page-btn" style="width:max-content" onclick="Core.postComment()">Přidat komentář</button>
+                    <textarea id="comment-input" class="comment-box" placeholder="Napiš recenzi k tomuto titulu..."></textarea>
+                    <button class="page-btn" style="width:max-content" onclick="Core.postComment()">Přidat recenzi</button>
                 </div>
                 <div id="comments-list" class="comments-list"></div>
             </div>
@@ -398,11 +408,23 @@
     </div>
 </div>
 
+
+<div id="playlist-create-modal" onclick="Core.closePlaylistCreateModal()">
+    <div class="playlist-create-box" onclick="event.stopPropagation()">
+        <div class="nav-label" style="margin:0 0 12px 0">Nový seznam</div>
+        <input id="sidebar-new-playlist" class="search-input" type="text" placeholder="Název seznamu..." style="padding-left:18px">
+        <div style="display:flex; gap:10px; margin-top:12px">
+            <button class="page-btn" onclick="Core.createPlaylistFromSidebar()">Vytvořit</button>
+            <button class="page-btn" onclick="Core.closePlaylistCreateModal()">Zrušit</button>
+        </div>
+    </div>
+</div>
+
 <script src="data.js"></script>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, getDocs, collection, onSnapshot, addDoc, query, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection, onSnapshot, addDoc, query, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCKDEC_0krG_OqfBuqd6vV2L2ixWDrWMZM",
@@ -417,7 +439,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    window.FB = { auth, db, doc, setDoc, getDoc, getDocs, collection, onSnapshot, addDoc, query, where, orderBy, limit, serverTimestamp, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
+    window.FB = { auth, db, doc, setDoc, getDoc, getDocs, deleteDoc, collection, onSnapshot, addDoc, query, where, orderBy, limit, serverTimestamp, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -446,7 +468,6 @@
             const initial = displayName.charAt(0).toUpperCase();
             document.getElementById('pc-user-email').innerText = displayName;
             document.getElementById('pc-user-initials').innerText = initial;
-            document.getElementById('mobile-user-badge').innerText = initial;
             Core.state.user = { uid: user.uid, email };
             Core.state.activeProfileUid = user.uid;
             document.getElementById('auth-overlay').style.display = 'none';
@@ -475,7 +496,8 @@
             commentsUnsub: null,
             publicProfiles: [],
             activeProfileUid: null,
-            profileRecentReviews: []
+            profileRecentReviews: [],
+            recoCache: { watchedIds: new Set(), catPref: { Movie:0, Serials:0, Anime:0 } }
         },
 
         async init() {
@@ -596,9 +618,9 @@
             let score = 0;
             const rated = this.state.db.ratings[item.id] || 0;
             if (rated > 0) score += rated * 4;
-            const watchedIds = new Set(this.state.db.episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0]));
+            const watchedIds = this.state.recoCache.watchedIds;
             if (!watchedIds.has(item.id.toString())) score += 20;
-            const catPref = this.getWatchedCategoryCount(item.cat);
+            const catPref = this.state.recoCache.catPref[item.cat] || 0;
             score += catPref * 3;
             if (this.state.db.fav.includes(item.id.toString())) score += 10;
             const global = this.state.globalRatings[item.id?.toString()];
@@ -627,7 +649,8 @@
             document.getElementById('profile-bio-view').innerText = bio;
             document.getElementById('pc-user-email').innerText = nick;
             document.getElementById('pc-user-initials').innerText = nick.charAt(0).toUpperCase();
-            document.getElementById('mobile-user-badge').innerText = nick.charAt(0).toUpperCase();
+            const headerAvatar = document.getElementById('header-profile-avatar');
+            if (headerAvatar) headerAvatar.src = avatar;
 
             document.getElementById('profile-nickname-input').disabled = !isOwn;
             document.getElementById('profile-avatar-input').disabled = !isOwn;
@@ -694,10 +717,25 @@
             this.state.profile.avatar = avatar;
             this.state.profile.bio = bio;
             await this.save();
+            await this.syncReviewAuthors();
             this.state.activeProfileUid = this.state.user?.uid || null;
             await this.loadUserRecentReviews(this.state.activeProfileUid);
             this.renderProfile();
             alert('Profil uložen.');
+        },
+
+
+        async syncReviewAuthors() {
+            const uid = this.state.user?.uid;
+            if (!uid) return;
+            const nick = this.state.profile.nickname || 'Uživatel';
+            try {
+                const snap = await FB.getDocs(FB.query(FB.collection(FB.db, 'comments'), FB.where('uid', '==', uid), FB.limit(200)));
+                for (const d of snap.docs) {
+                    const data = d.data();
+                    await FB.setDoc(FB.doc(FB.db, 'comments', d.id), { ...data, author: nick });
+                }
+            } catch (_) {}
         },
 
         startSearchFocus() {
@@ -815,9 +853,18 @@
 
         closePicker() { document.getElementById('playlist-picker').style.display = 'none'; this.state.pendingMediaId = null; },
 
-        addPlaylistPrompt() {
-            const n = prompt("Název nového seznamu:");
+        openOwnProfile() {
+            this.navigate('profile');
+            this.openProfile(this.state.user?.uid);
+        },
+
+        openPlaylistCreateModal() { document.getElementById('playlist-create-modal').style.display = 'flex'; },
+        closePlaylistCreateModal() { document.getElementById('playlist-create-modal').style.display = 'none'; },
+        createPlaylistFromSidebar() {
+            const n = document.getElementById('sidebar-new-playlist').value.trim();
             if(n && !this.state.db.playlists[n]) { this.state.db.playlists[n] = []; this.save(); this.syncPlaylists(); }
+            document.getElementById('sidebar-new-playlist').value = '';
+            this.closePlaylistCreateModal();
         },
 
         calculateProgress(item) {
@@ -852,7 +899,15 @@
                 if (this.state.db.playlists[this.state.view]) return m && this.state.db.playlists[this.state.view].includes(i.id.toString());
                 return m && i.cat === this.state.view;
             });
-            if (this.state.view === 'all') items = items.sort((a, b) => this.buildRecommendationScore(b) - this.buildRecommendationScore(a));
+            if (this.state.view === 'all') {
+                this.state.recoCache.watchedIds = new Set(this.state.db.episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0]));
+                this.state.recoCache.catPref = {
+                    Movie: this.getWatchedCategoryCount('Movie'),
+                    Serials: this.getWatchedCategoryCount('Serials'),
+                    Anime: this.getWatchedCategoryCount('Anime')
+                };
+                items = items.sort((a, b) => this.buildRecommendationScore(b) - this.buildRecommendationScore(a));
+            }
             const totalPages = Math.ceil(items.length / this.state.perPage) || 1;
             const slice = items.slice((this.state.page - 1) * this.state.perPage, this.state.page * this.state.perPage);
             document.getElementById('page-info').innerText = `${this.state.page} / ${totalPages}`;
@@ -913,8 +968,11 @@
                 list.innerHTML = snap.docs.map(d => {
                     const c = d.data();
                     const dt = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString('cs-CZ') : 'teď';
-                    const uid = c.uid ? `<button class="page-btn" style="padding:6px 10px" onclick="Core.navigate('profile'); Core.openProfile('${c.uid}')">Profil</button>` : '';
-                    return `<div class="comment-item"><div class="comment-head"><span class="comment-author">${c.author || 'Uživatel'}</span><span>${dt}</span>${uid}</div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
+                    const profile = this.state.publicProfiles.find(p => p.uid === c.uid);
+                    const authorName = profile?.nickname || c.author || 'Uživatel';
+                    const uidBtn = c.uid ? `<button class=\"page-btn\" style=\"padding:6px 10px\" onclick=\"Core.navigate('profile'); Core.openProfile('${c.uid}')\">Profil</button>` : '';
+                    const delBtn = c.uid && c.uid === this.state.user?.uid ? `<button class=\"page-btn\" style=\"padding:6px 10px\" onclick=\"Core.deleteReview('${d.id}', '${id}')\">Smazat</button>` : '';
+                    return `<div class=\"comment-item\"><div class=\"comment-head\"><span class=\"comment-author\">${authorName}</span><span>${dt}</span><span class=\"review-tools\">${uidBtn}${delBtn}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
                 }).join('');
             }, () => {
                 this.loadCommentsFallback(id);
@@ -928,7 +986,7 @@
                 const data = snap.exists() ? snap.data() : {};
                 const arr = (data.commentsFallback || []).slice(0, 100);
                 if (!arr.length) {
-                    list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Zatím bez komentářů.</div>`;
+                    list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Zatím bez recenzí.</div>`;
                     return;
                 }
                 list.innerHTML = arr.map(c => {
@@ -936,11 +994,28 @@
                     return `<div class="comment-item"><div class="comment-head"><span class="comment-author">${c.author || 'Uživatel'}</span><span>${dt}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
                 }).join('');
             } catch (_) {
-                list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Komentáře nejsou dostupné.</div>`;
+                list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Recenze nejsou dostupné.</div>`;
             }
         },
 
+        async deleteReview(reviewId, mediaId) {
+            if(!confirm('Smazat recenzi?')) return;
+            try {
+                await FB.deleteDoc(FB.doc(FB.db, 'comments', reviewId));
+            } catch (_) {
+                const statsRef = FB.doc(FB.db, 'global_ratings', mediaId.toString());
+                const snap = await FB.getDoc(statsRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    data.commentsFallback = (data.commentsFallback || []).filter(c => !(c.uid === this.state.user?.uid && c.mediaId === mediaId.toString()));
+                    await FB.setDoc(statsRef, data);
+                }
+            }
+            this.bindComments(mediaId);
+        },
+
         async postComment() {
+
             if (!this.state.activeItem) return;
             const input = document.getElementById('comment-input');
             const text = input.value.trim();
@@ -981,8 +1056,8 @@
                     input.value = '';
                     await this.loadCommentsFallback(this.state.activeItem.id);
                 } catch (_) {
-                    console.error('Comment send failed', e);
-                    alert('Komentář se nepodařilo odeslat. Zkus to znovu.');
+                    console.error('Review send failed', e);
+                    alert('Recenzi se nepodařilo odeslat. Zkus to znovu.');
                 }
             }
         },
