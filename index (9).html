@@ -67,7 +67,7 @@
         .search-wrapper.focused { z-index: 950; }
         .search-wrapper.focused .search-input { border-color: var(--accent); background: #000; box-shadow: 0 0 35px var(--accent-glow); }
 
-        #search-results { position: absolute; top: calc(100% + 10px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; max-height: 400px; overflow-y: auto; display: none; z-index: 2000; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        #search-results { position: absolute; top: calc(100% + 10px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; max-height: 400px; overflow-y: auto; display: none; z-index: 2000; box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: none; }
         .search-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
         .search-item:hover { background: var(--glass-heavy); }
         .search-item img { width: 40px; height: 55px; border-radius: 8px; object-fit: cover; }
@@ -131,6 +131,17 @@
         .stat-tile { background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 16px; padding: 14px; }
         .stat-num { font-family: 'JetBrains Mono'; font-size: 1.4rem; color: var(--accent); font-weight: 800; }
         .stat-lab { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .profile-bio { margin-top: 12px; color: #cbd5e1; line-height: 1.5; }
+        .profile-row { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .profile-list { display: grid; gap: 10px; max-height: 280px; overflow-y: auto; }
+        .profile-mini { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 14px; padding: 10px 12px; }
+        .profile-mini-main { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+        .profile-mini-avatar { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; background: #0b1220; }
+        .profile-mini-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profile-mini-sub { color: var(--text-dim); font-size: 0.75rem; }
+        .recent-item { border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px; background: rgba(255,255,255,0.02); }
+        .recent-title { font-weight: 700; }
+        .recent-meta { color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; }
 
         .comments-wrap { margin-top: 30px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px; }
         .comment-form { display: grid; gap: 10px; margin-bottom: 15px; }
@@ -196,29 +207,6 @@
             .auth-card { padding: 35px 25px; }
             .user-identity { margin: 10px 15px; padding: 15px; }
             .profile-avatar { width: 68px; height: 68px; border-radius: 16px; }
-        }
-
-        @media (max-width: 680px) {
-            aside { width: min(86vw, 320px); min-width: min(86vw, 320px); }
-            .media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-            .pagination { gap: 10px; }
-            .page-btn { padding: 10px 16px; }
-            .modal-scrollable { padding: 24px 16px; }
-            .picker-surface { padding: 20px; border-radius: 20px; }
-        }
-
-        @media (max-width: 420px) {
-            .search-input { font-size: 0.85rem; border-radius: 14px; }
-            .media-grid { gap: 10px; }
-            .poster-wrapper { border-radius: 16px; }
-            .action-btn { width: 34px; height: 34px; }
-            .rating-tag { font-size: 0.62rem; padding: 4px 8px; }
-            .picker-item { padding: 13px 14px; font-size: 0.9rem; }
-            .picker-delete-btn { width: 30px; height: 30px; }
-        }
-
-        @media (max-height: 740px) and (max-width: 900px) {
-            .modal-hero { height: 42vh; max-height: 42vh; }
         }
 
         @media (max-width: 680px) {
@@ -330,13 +318,32 @@
                     <div class="profile-form">
                         <input id="profile-nickname-input" class="search-input" type="text" placeholder="Nickname">
                         <input id="profile-avatar-input" class="search-input" type="url" placeholder="URL profilovky (https://...)">
+                        <input id="profile-bio-input" class="search-input" type="text" placeholder="Bio / něco o sobě">
                     </div>
                     <button class="page-btn" style="margin-top:12px" onclick="Core.saveProfile()">Uložit profil</button>
+                    <p id="profile-bio-view" class="profile-bio"></p>
                 </div>
 
                 <div class="profile-card">
                     <div class="nav-label" style="margin:0 0 12px 0">Statistiky sledování</div>
                     <div class="stat-grid" id="profile-stats-grid"></div>
+                </div>
+
+                <div class="profile-row">
+                    <div class="profile-card">
+                        <div class="nav-label" style="margin:0 0 12px 0">Posledních 5 zhlédnutých</div>
+                        <div id="profile-recent-watched" class="profile-list"></div>
+                    </div>
+                    <div class="profile-card">
+                        <div class="nav-label" style="margin:0 0 12px 0">Poslední recenze</div>
+                        <div id="profile-recent-reviews" class="profile-list"></div>
+                    </div>
+                </div>
+
+                <div class="profile-card">
+                    <div class="nav-label" style="margin:0 0 12px 0">Komunitní profily</div>
+                    <div id="community-profiles-list" class="profile-list"></div>
+                    <button class="page-btn" style="margin-top:12px" onclick="Core.openProfile(Core.state.user?.uid)">Zpět na můj profil</button>
                 </div>
             </div>
         </section>
@@ -394,7 +401,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, getDocs, collection, onSnapshot, addDoc, query, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCKDEC_0krG_OqfBuqd6vV2L2ixWDrWMZM",
@@ -409,7 +416,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    window.FB = { auth, db, doc, setDoc, getDoc, collection, onSnapshot, addDoc, query, orderBy, limit, serverTimestamp, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
+    window.FB = { auth, db, doc, setDoc, getDoc, getDocs, collection, onSnapshot, addDoc, query, where, orderBy, limit, serverTimestamp, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -423,13 +430,16 @@
                     fav: data.fav || [], 
                     episodes: data.episodes || [], 
                     ratings: data.ratings || {}, 
-                    playlists: data.playlists || {} 
+                    playlists: data.playlists || {},
+                    watchedLog: data.watchedLog || []
                 };
                 Core.state.profile.nickname = data.profile?.nickname || email.split('@')[0] || 'Uživatel';
                 Core.state.profile.avatar = data.profile?.avatar || '';
+                Core.state.profile.bio = data.profile?.bio || '';
             } else {
                 Core.state.profile.nickname = email.split('@')[0] || 'Uživatel';
                 Core.state.profile.avatar = '';
+                Core.state.profile.bio = '';
             }
             const displayName = Core.state.profile.nickname || 'Uživatel';
             const initial = displayName.charAt(0).toUpperCase();
@@ -437,6 +447,7 @@
             document.getElementById('pc-user-initials').innerText = initial;
             document.getElementById('mobile-user-badge').innerText = initial;
             Core.state.user = { uid: user.uid, email };
+            Core.state.activeProfileUid = user.uid;
             document.getElementById('auth-overlay').style.display = 'none';
             onSnapshot(collection(db, "global_ratings"), (snapshot) => {
                 let ratingsData = {};
@@ -454,16 +465,26 @@
 <script>
     window.Core = {
         state: {
-            db: { fav: [], episodes: [], ratings: {}, playlists: {} },
-            profile: { nickname: 'Uživatel', avatar: '' },
+            db: { fav: [], episodes: [], ratings: {}, playlists: {}, watchedLog: [] },
+            profile: { nickname: 'Uživatel', avatar: '', bio: '' },
             user: null,
             globalRatings: {}, 
             view: 'all', query: '', page: 1, perPage: 20, activeItem: null,
             searchTimeout: null, pendingMediaId: null, searchFocused: false,
-            commentsUnsub: null
+            commentsUnsub: null,
+            publicProfiles: [],
+            activeProfileUid: null,
+            profileRecentReviews: []
         },
 
-        async init() { this.syncPlaylists(); this.renderProfile(); this.renderGrid(); },
+        async init() {
+            this.syncPlaylists();
+            this.subscribeProfiles();
+            this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
+            await this.loadUserRecentReviews(this.state.activeProfileUid);
+            this.renderProfile();
+            this.renderGrid();
+        },
 
         toggleSidebar(f) {
             const s = document.getElementById('main-sidebar'), o = document.getElementById('sidebar-overlay');
@@ -502,6 +523,7 @@
             if(el) el.classList.add('active');
             let label = view === 'all' ? 'Všechno' : (view === 'favorites' ? 'Oblíbené' : (view === 'profile' ? 'Profil uživatele' : (this.state.db.playlists[view] ? `Seznam: ${view}` : view)));
             document.getElementById('view-title').innerText = label;
+            if (view === 'profile') this.openProfile(this.state.activeProfileUid || this.state.user?.uid);
             this.renderGrid();
             this.endSearchFocus();
             if (window.innerWidth <= 900) this.toggleSidebar(false);
@@ -525,38 +547,146 @@
             return count;
         },
 
+        subscribeProfiles() {
+            FB.onSnapshot(FB.query(FB.collection(FB.db, 'users'), FB.limit(60)), (snap) => {
+                this.state.publicProfiles = snap.docs.map(d => {
+                    const data = d.data() || {};
+                    return {
+                        uid: d.id,
+                        nickname: data.profile?.nickname || 'Uživatel',
+                        avatar: data.profile?.avatar || '',
+                        bio: data.profile?.bio || '',
+                        watchedLog: data.watchedLog || [],
+                        episodes: data.episodes || []
+                    };
+                });
+                if (this.state.view === 'profile') this.renderProfile();
+            });
+        },
+
+        async openProfile(uid) {
+            this.state.activeProfileUid = uid || this.state.user?.uid;
+            await this.loadUserRecentReviews(this.state.activeProfileUid);
+            this.renderProfile();
+        },
+
+        async loadUserRecentReviews(uid) {
+            if (!uid) return;
+            const collected = [];
+            const subset = mediaData.slice(0, 60);
+            for (const item of subset) {
+                try {
+                    const q = FB.query(
+                        FB.collection(FB.db, `comments_${item.id}`),
+                        FB.where('uid', '==', uid),
+                        FB.orderBy('createdAt', 'desc'),
+                        FB.limit(2)
+                    );
+                    const snap = await FB.getDocs(q);
+                    snap.forEach(d => {
+                        const c = d.data();
+                        collected.push({
+                            text: c.text || '',
+                            mediaTitle: c.mediaTitle || item.title,
+                            mediaCat: c.mediaCat || item.cat,
+                            createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : 0
+                        });
+                    });
+                } catch (_) {}
+            }
+            this.state.profileRecentReviews = collected.sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
+        },
+
         renderProfile() {
-            const nick = this.state.profile.nickname || 'Uživatel';
-            const avatar = this.state.profile.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(nick) + '&background=0f172a&color=38bdf8&bold=true';
-            const totalTitles = mediaData.length;
-            const watchedTitles = new Set(this.state.db.episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0])).size;
-            document.getElementById('profile-nickname-view').innerText = nick;
-            document.getElementById('profile-nickname-input').value = nick;
-            document.getElementById('profile-avatar-input').value = this.state.profile.avatar || '';
+            const ownUid = this.state.user?.uid;
+            const viewedUid = this.state.activeProfileUid || ownUid;
+            const external = this.state.publicProfiles.find(p => p.uid === viewedUid);
+            const isOwn = !viewedUid || viewedUid === ownUid;
+            const sourceProfile = isOwn ? { ...this.state.profile, episodes: this.state.db.episodes, watchedLog: this.state.db.watchedLog } : external;
+            const nick = sourceProfile?.nickname || 'Uživatel';
+            const avatar = sourceProfile?.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(nick) + '&background=0f172a&color=38bdf8&bold=true';
+            const bio = sourceProfile?.bio || 'Bez bio.';
+            const episodes = sourceProfile?.episodes || [];
+            const watchedLog = (sourceProfile?.watchedLog || []).slice().sort((a,b) => (b.at||0)-(a.at||0));
+            const watchedTitles = new Set(episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0])).size;
+
+            document.getElementById('profile-nickname-view').innerText = isOwn ? `${nick} (Ty)` : nick;
+            document.getElementById('profile-nickname-input').value = isOwn ? nick : '';
+            document.getElementById('profile-avatar-input').value = isOwn ? (this.state.profile.avatar || '') : '';
+            document.getElementById('profile-bio-input').value = isOwn ? (this.state.profile.bio || '') : '';
             document.getElementById('profile-avatar-preview').src = avatar;
+            document.getElementById('profile-bio-view').innerText = bio;
             document.getElementById('pc-user-email').innerText = nick;
             document.getElementById('pc-user-initials').innerText = nick.charAt(0).toUpperCase();
             document.getElementById('mobile-user-badge').innerText = nick.charAt(0).toUpperCase();
 
-            const movieCount = this.getWatchedCategoryCount('Movie');
-            const serialCount = this.getWatchedCategoryCount('Serials');
-            const animeCount = this.getWatchedCategoryCount('Anime');
+            document.getElementById('profile-nickname-input').disabled = !isOwn;
+            document.getElementById('profile-avatar-input').disabled = !isOwn;
+            document.getElementById('profile-bio-input').disabled = !isOwn;
+
+            const ids = new Set(episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0]));
+            let movieCount = 0, serialCount = 0, animeCount = 0;
+            ids.forEach(id => {
+                const item = this.getMediaById(id);
+                if (!item) return;
+                if (item.cat === 'Movie') movieCount += 1;
+                if (item.cat === 'Serials') serialCount += 1;
+                if (item.cat === 'Anime') animeCount += 1;
+            });
+            const topCat = [['Filmy', movieCount], ['Seriály', serialCount], ['Anime', animeCount]].sort((a,b) => b[1]-a[1])[0];
             document.getElementById('profile-stats-grid').innerHTML = `
                 <div class="stat-tile"><div class="stat-num">${watchedTitles}</div><div class="stat-lab">Zhlédnuté tituly</div></div>
-                <div class="stat-tile"><div class="stat-num">${totalTitles}</div><div class="stat-lab">Tituly v databázi</div></div>
                 <div class="stat-tile"><div class="stat-num">${movieCount}</div><div class="stat-lab">Filmy</div></div>
                 <div class="stat-tile"><div class="stat-num">${serialCount}</div><div class="stat-lab">Seriály</div></div>
                 <div class="stat-tile"><div class="stat-num">${animeCount}</div><div class="stat-lab">Anime</div></div>
+                <div class="stat-tile"><div class="stat-num">${topCat[0]}</div><div class="stat-lab">Nejvíc sleduje</div></div>
             `;
+
+            document.getElementById('profile-recent-watched').innerHTML = watchedLog.slice(0, 5).map(w => `
+                <div class="recent-item">
+                    <div class="recent-title">${w.title || 'Titul'}</div>
+                    <div class="recent-meta">${w.cat || '-'} • ${new Date(w.at || Date.now()).toLocaleString('cs-CZ')}</div>
+                </div>
+            `).join('') || `<div style="color:var(--text-dim)">Zatím nic nezhlédnuto.</div>`;
+
+            document.getElementById('profile-recent-reviews').innerHTML = this.state.profileRecentReviews.map(r => `
+                <div class="recent-item">
+                    <div class="recent-title">${r.mediaTitle}</div>
+                    <div>${(r.text || '').slice(0, 140)}</div>
+                    <div class="recent-meta">${r.mediaCat || ''}</div>
+                </div>
+            `).join('') || `<div style="color:var(--text-dim)">Žádné recenze.</div>`;
+
+            document.getElementById('community-profiles-list').innerHTML = this.state.publicProfiles
+                .filter(p => p.uid !== viewedUid)
+                .slice(0, 20)
+                .map(p => {
+                    const pav = p.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nickname || 'U') + '&background=0f172a&color=38bdf8&bold=true';
+                    return `
+                    <div class="profile-mini">
+                        <div class="profile-mini-main">
+                            <img class="profile-mini-avatar" src="${pav}" alt="avatar">
+                            <div>
+                                <div class="profile-mini-name">${p.nickname || 'Uživatel'}</div>
+                                <div class="profile-mini-sub">${(p.bio || 'Bez bio').slice(0, 48)}</div>
+                            </div>
+                        </div>
+                        <button class="page-btn" style="padding:8px 12px" onclick="Core.openProfile('${p.uid}')">Navštívit</button>
+                    </div>`;
+                }).join('') || `<div style="color:var(--text-dim)">Žádné profily.</div>`;
         },
 
         async saveProfile() {
             const nick = document.getElementById('profile-nickname-input').value.trim();
             const avatar = document.getElementById('profile-avatar-input').value.trim();
+            const bio = document.getElementById('profile-bio-input').value.trim();
             if (!nick) return alert('Nickname je povinný.');
             this.state.profile.nickname = nick;
             this.state.profile.avatar = avatar;
+            this.state.profile.bio = bio;
             await this.save();
+            this.state.activeProfileUid = this.state.user?.uid || null;
+            await this.loadUserRecentReviews(this.state.activeProfileUid);
             this.renderProfile();
             alert('Profil uložen.');
         },
@@ -773,7 +903,8 @@
                 list.innerHTML = snap.docs.map(d => {
                     const c = d.data();
                     const dt = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString('cs-CZ') : 'teď';
-                    return `<div class="comment-item"><div class="comment-head"><span class="comment-author">${c.author || 'Uživatel'}</span><span>${dt}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
+                    const uid = c.uid ? `<button class="page-btn" style="padding:6px 10px" onclick="Core.navigate('profile'); Core.openProfile('${c.uid}')">Profil</button>` : '';
+                    return `<div class="comment-item"><div class="comment-head"><span class="comment-author">${c.author || 'Uživatel'}</span><span>${dt}</span>${uid}</div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
                 }).join('');
             });
         },
@@ -784,13 +915,24 @@
             const text = input.value.trim();
             if (!text) return;
             const nick = this.state.profile.nickname || this.state.user?.email?.split('@')[0] || 'Uživatel';
-            await FB.addDoc(FB.collection(FB.db, `comments_${this.state.activeItem.id}`), {
-                text,
-                author: nick,
-                uid: this.state.user?.uid || null,
-                createdAt: FB.serverTimestamp()
-            });
-            input.value = '';
+            try {
+                await FB.addDoc(FB.collection(FB.db, `comments_${this.state.activeItem.id}`), {
+                    text,
+                    author: nick,
+                    uid: this.state.user?.uid || null,
+                    mediaTitle: this.state.activeItem.title || '',
+                    mediaCat: this.state.activeItem.cat || '',
+                    createdAt: FB.serverTimestamp()
+                });
+                input.value = '';
+                if (this.state.user?.uid && this.state.view === 'profile') {
+                    await this.loadUserRecentReviews(this.state.activeProfileUid || this.state.user.uid);
+                    this.renderProfile();
+                }
+            } catch (e) {
+                console.error('Comment send failed', e);
+                alert('Komentář se nepodařilo odeslat. Zkus to znovu.');
+            }
         },
 
         updateModalProgress() {
@@ -855,7 +997,17 @@
 
         toggleEp(uid, el) {
             const idx = this.state.db.episodes.indexOf(uid);
+            const nowWatched = idx === -1;
             if(idx > -1) this.state.db.episodes.splice(idx, 1); else this.state.db.episodes.push(uid);
+            if (nowWatched) {
+                const mediaId = uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0];
+                const item = this.getMediaById(mediaId);
+                if (item) {
+                    this.state.db.watchedLog = (this.state.db.watchedLog || []).filter(w => w.id?.toString() !== item.id.toString());
+                    this.state.db.watchedLog.unshift({ id: item.id.toString(), title: item.title, cat: item.cat, at: Date.now() });
+                    this.state.db.watchedLog = this.state.db.watchedLog.slice(0, 120);
+                }
+            }
             this.save(); this.updateModalProgress(); this.renderGrid();
             if(el.tagName === 'BUTTON') el.innerText = this.state.db.episodes.includes(uid) ? 'ZHLÉDNUTO ✓' : 'OZNAČIT JAKO VIDĚNÉ';
             else el.classList.toggle('watched');
