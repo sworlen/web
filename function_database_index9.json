@@ -1,0 +1,261 @@
+{
+  "source_file": "index (9).html",
+  "description": "Indexed function database for index (9).html",
+  "core_method_count": 28,
+  "module_callback_count": 2,
+  "functions": [
+    {
+      "name": "init",
+      "params": [],
+      "start_line": 343,
+      "end_line": 343,
+      "scope": "window.Core"
+    },
+    {
+      "name": "toggleSidebar",
+      "params": [
+        "f"
+      ],
+      "start_line": 345,
+      "end_line": 350,
+      "scope": "window.Core"
+    },
+    {
+      "name": "save",
+      "params": [],
+      "start_line": 352,
+      "end_line": 357,
+      "scope": "window.Core"
+    },
+    {
+      "name": "handleAuth",
+      "params": [],
+      "start_line": 359,
+      "end_line": 364,
+      "scope": "window.Core"
+    },
+    {
+      "name": "toggleAuthMode",
+      "params": [],
+      "start_line": 366,
+      "end_line": 371,
+      "scope": "window.Core"
+    },
+    {
+      "name": "logout",
+      "params": [],
+      "start_line": 373,
+      "end_line": 373,
+      "scope": "window.Core"
+    },
+    {
+      "name": "navigate",
+      "params": [
+        "view",
+        "el"
+      ],
+      "start_line": 375,
+      "end_line": 383,
+      "scope": "window.Core"
+    },
+    {
+      "name": "handleSearch",
+      "params": [
+        "v"
+      ],
+      "start_line": 385,
+      "end_line": 404,
+      "scope": "window.Core"
+    },
+    {
+      "name": "changePage",
+      "params": [
+        "o"
+      ],
+      "start_line": 406,
+      "end_line": 406,
+      "scope": "window.Core"
+    },
+    {
+      "name": "toggleFavorite",
+      "params": [
+        "e",
+        "id"
+      ],
+      "start_line": 408,
+      "end_line": 414,
+      "scope": "window.Core"
+    },
+    {
+      "name": "openPlaylistPicker",
+      "params": [
+        "e",
+        "id"
+      ],
+      "start_line": 416,
+      "end_line": 434,
+      "scope": "window.Core"
+    },
+    {
+      "name": "confirmAddToPlaylist",
+      "params": [
+        "name"
+      ],
+      "start_line": 436,
+      "end_line": 442,
+      "scope": "window.Core"
+    },
+    {
+      "name": "createPlaylistFromPicker",
+      "params": [],
+      "start_line": 444,
+      "end_line": 452,
+      "scope": "window.Core"
+    },
+    {
+      "name": "closePicker",
+      "params": [],
+      "start_line": 454,
+      "end_line": 454,
+      "scope": "window.Core"
+    },
+    {
+      "name": "addPlaylistPrompt",
+      "params": [],
+      "start_line": 456,
+      "end_line": 459,
+      "scope": "window.Core"
+    },
+    {
+      "name": "calculateProgress",
+      "params": [
+        "item"
+      ],
+      "start_line": 461,
+      "end_line": 468,
+      "scope": "window.Core"
+    },
+    {
+      "name": "renderGrid",
+      "params": [],
+      "start_line": 470,
+      "end_line": 513,
+      "scope": "window.Core"
+    },
+    {
+      "name": "openModal",
+      "params": [
+        "id"
+      ],
+      "start_line": 515,
+      "end_line": 523,
+      "scope": "window.Core"
+    },
+    {
+      "name": "updateModalProgress",
+      "params": [],
+      "start_line": 525,
+      "end_line": 529,
+      "scope": "window.Core"
+    },
+    {
+      "name": "renderStars",
+      "params": [
+        "id"
+      ],
+      "start_line": 531,
+      "end_line": 538,
+      "scope": "window.Core"
+    },
+    {
+      "name": "starHover",
+      "params": [
+        "el",
+        "v"
+      ],
+      "start_line": 540,
+      "end_line": 543,
+      "scope": "window.Core"
+    },
+    {
+      "name": "rate",
+      "params": [
+        "id",
+        "v"
+      ],
+      "start_line": 545,
+      "end_line": 551,
+      "scope": "window.Core"
+    },
+    {
+      "name": "toggleAccordion",
+      "params": [
+        "el"
+      ],
+      "start_line": 553,
+      "end_line": 560,
+      "scope": "window.Core"
+    },
+    {
+      "name": "renderContent",
+      "params": [
+        "item"
+      ],
+      "start_line": 562,
+      "end_line": 583,
+      "scope": "window.Core"
+    },
+    {
+      "name": "toggleEp",
+      "params": [
+        "uid",
+        "el"
+      ],
+      "start_line": 585,
+      "end_line": 591,
+      "scope": "window.Core"
+    },
+    {
+      "name": "deletePlaylist",
+      "params": [
+        "e",
+        "n"
+      ],
+      "start_line": 593,
+      "end_line": 599,
+      "scope": "window.Core"
+    },
+    {
+      "name": "syncPlaylists",
+      "params": [],
+      "start_line": 601,
+      "end_line": 607,
+      "scope": "window.Core"
+    },
+    {
+      "name": "closeModal",
+      "params": [],
+      "start_line": 609,
+      "end_line": 609,
+      "scope": "window.Core"
+    }
+  ],
+  "module_callbacks": [
+    {
+      "name": "onAuthStateChanged_callback",
+      "params": [
+        "user"
+      ],
+      "start_line": 301,
+      "scope": "module script"
+    },
+    {
+      "name": "onSnapshot_callback",
+      "params": [
+        "snapshot"
+      ],
+      "start_line": 321,
+      "scope": "module script"
+    }
+  ]
+}
