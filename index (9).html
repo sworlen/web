@@ -191,6 +191,7 @@
             .search-input { padding: 14px 20px 14px 45px; font-size: 0.9rem; }
             .search-wrapper i { left: 15px; }
             #stats-counter { display: none; }
+            .header-profile-btn span { display: none; }
 
             .viewport-content { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); }
             #view-title { font-size: clamp(1.8rem, 8vw, 2.2rem); margin-bottom: 20px; }
@@ -270,6 +271,7 @@
         <div class="nav-link" data-view="Serials" onclick="Core.navigate('Serials', this)"><i class="fa-solid fa-tv"></i> Seriály</div>
         <div class="nav-link" data-view="Anime" onclick="Core.navigate('Anime', this)"><i class="fa-solid fa-ghost"></i> Anime</div>
         <div class="nav-link" data-view="favorites" onclick="Core.navigate('favorites', this)"><i class="fa-solid fa-heart" style="color:var(--c-fav)"></i> Oblíbené</div>
+        <div class="nav-link" data-view="profile" onclick="Core.navigate('profile', this)"><i class="fa-solid fa-user"></i> Profil</div>
         
         <div class="nav-label">Moje Seznamy <i class="fa-solid fa-plus" style="cursor:pointer" onclick="Core.openPlaylistCreateModal()"></i></div>
         <div id="sidebar-playlists"></div>
