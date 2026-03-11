@@ -70,6 +70,19 @@
         .search-wrapper.focused { z-index: 3200; }
         .search-wrapper.focused .search-input { border-color: var(--accent); background: #000; box-shadow: 0 0 35px var(--accent-glow); }
 
+        .filter-toggle-btn { border: 1px solid var(--glass-border); background: var(--glass); color: white; border-radius: 14px; padding: 12px 16px; font-weight: 700; cursor: pointer; }
+        .filter-panel { margin: 16px 0 22px; border: 1px solid var(--glass-border); background: rgba(15, 23, 42, 0.55); border-radius: 18px; padding: 14px; display: none; gap: 12px; }
+        .filter-panel.open { display: grid; }
+        .filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .filter-select { background: rgba(255,255,255,0.06); color: white; border: 1px solid var(--glass-border); border-radius: 10px; padding: 10px 12px; }
+        .trend-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .trend-chip { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--glass-border); cursor: pointer; background: rgba(255,255,255,0.04); font-size: 0.78rem; font-weight: 700; }
+        .similar-wrap { margin-top: 18px; }
+        .similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 10px; }
+        .similar-card { border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; cursor: pointer; background: rgba(255,255,255,0.03); }
+        .similar-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; display:block; }
+        .similar-title { padding: 8px; font-size: 0.82rem; font-weight: 700; }
+
         #search-results { position: absolute; top: calc(100% + 10px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; max-height: 400px; overflow-y: auto; display: none; z-index: 4200; box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: none; }
         .search-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
         .search-item:hover { background: var(--glass-heavy); }
@@ -99,6 +112,11 @@
         .poster-wrapper { position: relative; width: 100%; aspect-ratio: 2/3; border-radius: 22px; overflow: hidden; border: 1px solid var(--glass-border); }
         .poster-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; padding-bottom: 25px; }
+        .platform-chips { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+        .platform-chip { padding: 4px 8px; border-radius: 999px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.08); font-size: 0.66rem; font-weight: 700; line-height: 1; }
+
+        .modal-platforms { margin: 0 0 24px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .modal-platform-chip { padding: 7px 11px; border-radius: 999px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: #dbeafe; font-size: 0.78rem; font-weight: 700; }
 
         /* Modals */
         #modal-engine, #playlist-picker { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.9); backdrop-filter: blur(30px); display: none; align-items: center; justify-content: center; padding: 30px; }
@@ -303,11 +321,39 @@
                    oninput="Core.handleSearch(this.value)" onfocus="Core.startSearchFocus(); Core.handleSearch(this.value)" onblur="setTimeout(() => Core.endSearchFocus(), 180)">
             <div id="search-results"></div>
         </div>
+<<<<<<< HEAD:index.html
+        <button class="luck-btn" onclick="Core.tryMyLuck()" title="Náhodné doporučení podle aktuální kategorie">
+            <i class="fa-solid fa-dice"></i>
+            <span>Try my luck</span>
+        </button>
+        <button class="filter-toggle-btn" onclick="Core.toggleFilterPanel()"><i class="fa-solid fa-sliders"></i> Filtry</button>
+=======
+>>>>>>> main:index (10).html
         <div id="stats-counter" style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.8rem; white-space: nowrap;">0 TITULŮ</div>
     </header>
 
     <div class="viewport-content">
-        <h2 id="view-title" style="font-size: 3rem; font-weight: 900; margin-bottom: 40px; letter-spacing: -2px;">Všechno</h2>
+        <h2 id="view-title" style="font-size: 3rem; font-weight: 900; margin-bottom: 22px; letter-spacing: -2px;">Všechno</h2>
+        <div id="trend-chips" class="trend-chips"></div>
+        <div id="filter-panel" class="filter-panel">
+            <div class="filter-row">
+                <select id="filter-sort" class="filter-select" onchange="Core.applyFilters()">
+                    <option value="recommended">Doporučené</option>
+                    <option value="mostRated">Nejhodnocenější (počtem)</option>
+                    <option value="topRated">Nejlépe hodnocené</option>
+                    <option value="mostOpened">Nejklikanější</option>
+                    <option value="newest">Nejnovější</option>
+                </select>
+                <select id="filter-platform" class="filter-select" onchange="Core.applyFilters()">
+                    <option value="">Všechny platformy</option>
+                </select>
+                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-dim)">Min. rating
+                    <input id="filter-min-rating" type="range" min="0" max="10" step="0.5" value="0" oninput="Core.applyFilters()">
+                    <span id="filter-min-rating-value">0</span>
+                </label>
+                <button class="page-btn" style="padding:10px 14px" onclick="Core.resetFilters()">Reset</button>
+            </div>
+        </div>
         <div class="media-grid" id="main-grid"></div>
         <div class="pagination" id="main-pagination">
             <button class="page-btn" id="prev-btn" onclick="Core.changePage(-1)">Zpět</button>
@@ -385,7 +431,9 @@
             <div class="nav-label" style="margin-left:0">Tvoje hodnocení</div>
             <div class="star-container" id="m-stars"></div>
             <p id="m-desc" style="color: #94a3b8; line-height: 1.6; margin-bottom: 30px;"></p>
+            <div id="m-platforms" class="modal-platforms"></div>
             <div id="m-content-root"></div>
+            <div id="m-similar" class="similar-wrap"></div>
             <div class="comments-wrap">
                 <div class="nav-label" style="margin:0 0 12px 0">Recenze komunity</div>
                 <div class="comment-form">
@@ -473,8 +521,14 @@
             }
             const displayName = Core.state.profile.nickname || 'Uživatel';
             const initial = displayName.charAt(0).toUpperCase();
+            Core.state.ownIdentity.nickname = displayName;
+            Core.state.ownIdentity.avatar = Core.state.profile.avatar || '';
             document.getElementById('pc-user-email').innerText = displayName;
-            document.getElementById('pc-user-initials').innerText = initial;
+            if (Core.state.ownIdentity.avatar) {
+                document.getElementById('pc-user-initials').innerHTML = `<img src="${Core.state.ownIdentity.avatar}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+            } else {
+                document.getElementById('pc-user-initials').innerText = initial;
+            }
             Core.state.user = { uid: user.uid, email };
             Core.state.activeProfileUid = user.uid;
             document.getElementById('auth-overlay').style.display = 'none';
@@ -507,18 +561,237 @@
             recoCache: { watchedIds: new Set(), catPref: { Movie:0, Serials:0, Anime:0 } },
             allReviews: [],
             communityProfileQuery: '',
-            profileReviewsUnsub: null
+            communityProfileLoading: false,
+            communityProfiles: [],
+            profileReviewsUnsub: null,
+            mediaById: new Map(),
+            mediaRecords: [],
+            mediaBootstrapStarted: false,
+            mediaLoadPromise: null,
+            mediaLoadError: '',
+            mediaLoadTriedPaths: [],
+            confirmAction: null,
+            reviewEditTarget: null,
+            filteredCacheSig: '',
+            filteredCacheItems: [],
+            normCache: new Map(),
+            suppressOwnProfileLoad: false,
+            filterPanelOpen: false,
+            filters: { sort: 'recommended', platform: '', minRating: 0, trend: 'all' },
+            localStats: { opens: {} },
+            ownIdentity: { nickname: 'Uživatel', avatar: '' }
         },
 
         async init() {
+            this.state.mediaBootstrapStarted = true;
+            await this.loadMediaData();
+            this.prepareMediaCache();
+            this.loadLocalStats();
             this.syncPlaylists();
-            this.subscribeProfiles();
+            this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
+            this.populateFilterOptions();
+
+            // Fast first paint: render grid immediately and load slower DB sections in background.
+            this.renderGrid();
+            this.renderProfile();
+            this.renderTrendChips();
+
+            this.deferTask(() => this.subscribeProfiles());
+            // Reviews should start immediately so Community Reviews view is never empty for too long.
             this.subscribeAllReviews();
             this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
             await this.loadUserRecentReviews(this.state.activeProfileUid);
             this.renderProfile();
             this.renderGrid();
             window.addEventListener('resize', () => this.updateSearchOverlayTop());
+        },
+
+        async loadMediaData() {
+            const readGlobalMedia = () => {
+                try {
+                    if (typeof mediaData !== 'undefined' && Array.isArray(mediaData)) return mediaData;
+                } catch (_) {}
+                return Array.isArray(window.mediaData) ? window.mediaData : [];
+            };
+
+            if (readGlobalMedia().length) {
+                window.mediaData = readGlobalMedia();
+                return;
+            }
+            if (this.state.mediaLoadPromise) {
+                await this.state.mediaLoadPromise;
+                return;
+            }
+            this.state.mediaLoadPromise = (async () => {
+                const loadLegacyScriptData = async (candidates) => {
+                    for (const src of candidates) {
+                        try {
+                            await new Promise((resolve, reject) => {
+                                const s = document.createElement('script');
+                                s.src = src;
+                                s.async = true;
+                                s.onload = resolve;
+                                s.onerror = reject;
+                                document.head.appendChild(s);
+                            });
+                            const found = readGlobalMedia();
+                            if (found.length) {
+                                window.mediaData = found;
+                                return true;
+                            }
+                        } catch (_) {}
+                    }
+                    return false;
+                };
+
+                const readCachedMedia = () => {
+                    try {
+                        const raw = localStorage.getItem('mediaDataCacheV1');
+                        if (!raw) return [];
+                        const parsed = JSON.parse(raw);
+                        return Array.isArray(parsed) ? parsed : [];
+                    } catch (_) {
+                        return [];
+                    }
+                };
+
+                const writeCachedMedia = (arr) => {
+                    try {
+                        if (Array.isArray(arr) && arr.length) {
+                            localStorage.setItem('mediaDataCacheV1', JSON.stringify(arr));
+                        }
+                    } catch (_) {}
+                };
+
+                const fetchTextWithRetry = async (path) => {
+                    const variants = [
+                        new URL(path, window.location.href).toString(),
+                        `${path}${path.includes('?') ? '&' : '?'}_ts=${Date.now()}`
+                    ];
+                    let lastErr = null;
+                    for (const url of variants) {
+                        try {
+                            const res = await fetch(url, { cache: 'no-store' });
+                            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                            return await res.text();
+                        } catch (e) {
+                            lastErr = e;
+                        }
+                    }
+                    throw lastErr || new Error('Fetch failed');
+                };
+
+                const tryParseLooseJsonList = (rawText) => {
+                    if (!rawText || typeof rawText !== 'string') return [];
+                    const text = rawText.trim();
+                    if (!text) return [];
+
+                    // Case 1: objects separated by commas but not wrapped in array: {..},{..}
+                    try {
+                        const wrapped = `[${text.replace(/,\s*$/,'')}]`;
+                        const parsed = JSON.parse(wrapped);
+                        if (Array.isArray(parsed)) return parsed;
+                    } catch (_) {}
+
+                    // Case 2: NDJSON (one JSON object per line)
+                    try {
+                        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                        const objs = lines.map(l => JSON.parse(l));
+                        if (objs.length) return objs;
+                    } catch (_) {}
+
+                    // Case 3: best-effort object chunk extraction by balanced braces
+                    const out = [];
+                    let depth = 0, start = -1;
+                    for (let i = 0; i < text.length; i += 1) {
+                        const ch = text[i];
+                        if (ch === '{') {
+                            if (depth === 0) start = i;
+                            depth += 1;
+                        } else if (ch === '}') {
+                            depth -= 1;
+                            if (depth === 0 && start > -1) {
+                                const chunk = text.slice(start, i + 1);
+                                try { out.push(JSON.parse(chunk)); } catch (_) {}
+                                start = -1;
+                            }
+                        }
+                    }
+                    return out;
+                };
+
+                try {
+                    const defaultPaths = ['./data.js', 'data.js', '../data.js'];
+                    const configuredPath = (window.MEDIA_DATA_PATH || '').toString().trim();
+                    const paths = configuredPath ? [configuredPath, ...defaultPaths] : defaultPaths;
+                    this.state.mediaLoadTriedPaths = paths.slice();
+                    let loaded = await loadLegacyScriptData(paths);
+                    if (!loaded) {
+                        for (const path of paths) {
+                            try {
+                                const rawText = await fetchTextWithRetry(path);
+                                if (/^\s*<!doctype html|^\s*<html/i.test(rawText)) {
+                                    throw new Error('Path returned HTML instead of JS dataset');
+                                }
+                                const scriptMatch = rawText.match(/mediaData\s*=\s*(\[[\s\S]*?\])\s*;?/);
+                                if (!scriptMatch || !scriptMatch[1]) {
+                                    throw new Error('Nenalezena mediaData v data.js');
+                                }
+                                let parsed = [];
+                                try {
+                                    parsed = JSON.parse(scriptMatch[1]);
+                                } catch (_) {
+                                    parsed = tryParseLooseJsonList(scriptMatch[1]);
+                                }
+                                if (parsed.length) {
+                                    window.mediaData = parsed;
+                                    writeCachedMedia(parsed);
+                                    this.state.mediaLoadError = '';
+                                    loaded = true;
+                                    break;
+                                }
+                            } catch (e) {
+                                console.warn(`Načtení datasetu selhalo pro ${path}`, e);
+                            }
+                        }
+                    }
+                    if (!loaded) {
+                        const scriptData = readGlobalMedia();
+                        if (scriptData.length) {
+                            window.mediaData = scriptData;
+                            writeCachedMedia(scriptData);
+                            this.state.mediaLoadError = '';
+                            loaded = true;
+                        }
+                    }
+                    if (!loaded) {
+                        const cached = readCachedMedia();
+                        if (cached.length) {
+                            window.mediaData = cached;
+                            this.state.mediaLoadError = 'Používám offline cache datasetu (data.js se teď nepodařilo načíst).';
+                        } else {
+                            window.mediaData = [];
+                            this.state.mediaLoadError = `Nepodařilo se najít platný dataset. Zkontroluj cestu k JS datasetu (${paths.join(', ')}).`;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Nepodařilo se načíst data.js', e);
+                    const fallback = readGlobalMedia().length ? readGlobalMedia() : readCachedMedia();
+                    window.mediaData = Array.isArray(fallback) ? fallback : [];
+                    this.state.mediaLoadError = window.mediaData.length
+                        ? 'Načtení data.js selhalo, používám fallback data.'
+                        : 'Načtení data.js selhalo.';
+                }
+            })();
+            await this.state.mediaLoadPromise;
+        },
+
+        deferTask(fn) {
+            if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(() => fn(), { timeout: 450 });
+                return;
+            }
+            setTimeout(fn, 0);
         },
 
         toggleSidebar(f) {
@@ -565,7 +838,225 @@
         },
 
         getMediaById(id) {
-            return mediaData.find(x => x.id.toString() === id.toString());
+            return this.state.mediaById.get(id?.toString()) || null;
+        },
+
+        loadLocalStats() {
+            try {
+                const raw = localStorage.getItem('mediaVaultLocalStatsV1');
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') this.state.localStats = { opens: parsed.opens || {} };
+            } catch (_) {}
+        },
+
+        saveLocalStats() {
+            try {
+                localStorage.setItem('mediaVaultLocalStatsV1', JSON.stringify(this.state.localStats));
+            } catch (_) {}
+        },
+
+        recordMediaOpen(id) {
+            const key = id?.toString();
+            if (!key) return;
+            const current = this.state.localStats.opens[key] || 0;
+            this.state.localStats.opens[key] = current + 1;
+            this.saveLocalStats();
+        },
+
+        toggleFilterPanel() {
+            this.state.filterPanelOpen = !this.state.filterPanelOpen;
+            const panel = document.getElementById('filter-panel');
+            if (panel) panel.classList.toggle('open', this.state.filterPanelOpen);
+        },
+
+        applyFilters() {
+            const sort = document.getElementById('filter-sort');
+            const platform = document.getElementById('filter-platform');
+            const minRating = document.getElementById('filter-min-rating');
+            const out = document.getElementById('filter-min-rating-value');
+            this.state.filters.sort = sort ? sort.value : 'recommended';
+            this.state.filters.platform = platform ? platform.value : '';
+            this.state.filters.minRating = minRating ? Number(minRating.value || 0) : 0;
+            if (out) out.innerText = this.state.filters.minRating.toString();
+            this.state.page = 1;
+            this.renderGrid();
+        },
+
+        resetFilters() {
+            const sort = document.getElementById('filter-sort');
+            const platform = document.getElementById('filter-platform');
+            const minRating = document.getElementById('filter-min-rating');
+            if (sort) sort.value = 'recommended';
+            if (platform) platform.value = '';
+            if (minRating) minRating.value = '0';
+            this.state.filters = { ...this.state.filters, sort: 'recommended', platform: '', minRating: 0, trend: 'all' };
+            this.applyFilters();
+            this.renderTrendChips();
+        },
+
+        populateFilterOptions() {
+            const el = document.getElementById('filter-platform');
+            if (!el) return;
+            const set = new Set();
+            this.state.mediaRecords.forEach(item => this.normalizePlatforms(item.platforms).forEach(p => set.add(p)));
+            const opts = Array.from(set).sort((a,b)=>a.localeCompare(b,'cs'));
+            el.innerHTML = '<option value="">Všechny platformy</option>' + opts.map(p => `<option value="${p}">${p}</option>`).join('');
+        },
+
+        renderTrendChips() {
+            const root = document.getElementById('trend-chips');
+            if (!root) return;
+            const trends = [
+                { id: 'all', label: 'Všechno' },
+                { id: 'popular', label: 'Nejhledanější' },
+                { id: 'discussed', label: 'Nejvíc hodnocené' },
+                { id: 'hidden', label: 'Skryté perly' }
+            ];
+            root.innerHTML = trends.map(t => `<button class="trend-chip" style="${this.state.filters.trend===t.id?'border-color:var(--accent);color:var(--accent);':''}" onclick="Core.setTrend('${t.id}')">${t.label}</button>`).join('');
+        },
+
+        setTrend(id) {
+            this.state.filters.trend = id;
+            this.state.page = 1;
+            this.renderTrendChips();
+            this.renderGrid();
+        },
+
+        getEngagementScore(item) {
+            const g = this.state.globalRatings[item.id?.toString()] || {};
+            const opens = this.state.localStats.opens[item.id?.toString()] || 0;
+            const ratedCount = Number(g.count || 0);
+            return (ratedCount * 10) + opens;
+        },
+
+        getSimilarItems(item, limit = 8) {
+            if (!item) return [];
+            const baseCast = Array.isArray(item.cast) ? item.cast : [];
+            const basePlatforms = this.normalizePlatforms(item.platforms);
+            return this.state.mediaRecords
+                .filter(x => x.id?.toString() !== item.id?.toString())
+                .map(x => {
+                    let s = 0;
+                    if (x.cat === item.cat) s += 5;
+                    const cast = Array.isArray(x.cast) ? x.cast : [];
+                    const overlapCast = cast.filter(c => baseCast.includes(c)).length;
+                    const overlapPlatforms = this.normalizePlatforms(x.platforms).filter(p => basePlatforms.includes(p)).length;
+                    s += overlapCast * 3 + overlapPlatforms * 2;
+                    s += (Number(x.rating) || 0) / 2;
+                    return { item: x, score: s };
+                })
+                .sort((a,b)=>b.score-a.score)
+                .slice(0, limit)
+                .map(x => x.item);
+        },
+
+        renderSimilarInModal(item) {
+            const root = document.getElementById('m-similar');
+            if (!root) return;
+            const similar = this.getSimilarItems(item, 8);
+            if (!similar.length) {
+                root.innerHTML = '';
+                return;
+            }
+            root.innerHTML = `<div class="nav-label" style="margin:0 0 10px 0">Podobné tituly</div><div class="similar-grid">${similar.map(s => `<div class="similar-card" onclick="Core.openModal('${s.id}')"><img src="${s.image}" alt="${s.title}"><div class="similar-title">${s.title}</div></div>`).join('')}</div>`;
+        },
+
+        normalizePlatforms(value) {
+            if (!Array.isArray(value)) return [];
+            return value
+                .map(p => (p || '').toString().trim())
+                .filter(Boolean);
+        },
+
+        renderPlatformsHtml(platforms, variant = 'card') {
+            const clean = this.normalizePlatforms(platforms);
+            if (!clean.length) return '';
+            if (variant === 'modal') {
+                return clean.map(platform => `<span class="modal-platform-chip">${platform}</span>`).join('');
+            }
+            const preview = clean.slice(0, 3);
+            const overflow = clean.length > 3 ? `<span class="platform-chip">+${clean.length - 3}</span>` : '';
+            return `<div class="platform-chips">${preview.map(platform => `<span class="platform-chip">${platform}</span>`).join('')}${overflow}</div>`;
+        },
+
+        prepareMediaCache() {
+            if (this.state.mediaRecords.length > 0) return;
+            const source = (typeof mediaData !== 'undefined' && Array.isArray(mediaData))
+                ? mediaData
+                : (Array.isArray(window.mediaData) ? window.mediaData : []);
+            if (!source.length) return;
+            const out = new Array(source.length);
+            const byId = new Map();
+            for (let i = 0; i < source.length; i += 1) {
+                const item = source[i] || {};
+                const normalized = {
+                    ...item,
+                    _id: item.id?.toString(),
+                    _qTitle: this.normalizeText(item.title || ''),
+                    year: item.year || (item.release ? String(item.release).slice(0, 4) : '')
+                };
+                out[i] = normalized;
+                if (normalized._id) byId.set(normalized._id, normalized);
+            }
+            this.state.mediaRecords = out;
+            this.state.mediaById = byId;
+        },
+
+        ensureMediaCacheReady() {
+            if (this.state.mediaRecords.length) return;
+            const startedAt = Date.now();
+            const timer = setInterval(() => {
+                if (this.state.mediaRecords.length) {
+                    clearInterval(timer);
+                    return;
+                }
+                if (!Array.isArray(window.mediaData) || !window.mediaData.length) {
+                    this.loadMediaData().catch(() => {});
+                }
+                this.prepareMediaCache();
+                if (this.state.mediaRecords.length) {
+                    clearInterval(timer);
+                    this.populateFilterOptions();
+                    this.renderTrendChips();
+                    this.renderGrid();
+                    return;
+                }
+                if (Date.now() - startedAt > 15000) clearInterval(timer);
+            }, 250);
+        },
+
+        normalizeText(v) {
+            const raw = (v || '').toString();
+            const hit = this.state.normCache.get(raw);
+            if (hit !== undefined) return hit;
+            const normalized = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+            if (this.state.normCache.size > 2000) this.state.normCache.clear();
+            this.state.normCache.set(raw, normalized);
+            return normalized;
+        },
+
+        isMediaWatched(mediaId) {
+            const key = mediaId?.toString();
+            if (!key) return false;
+            return this.state.db.episodes.some(uid => {
+                const raw = uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0];
+                return raw.toString() === key;
+            });
+        },
+
+        syncWatchedLogEntry(mediaId, bumpTs = false) {
+            const key = mediaId?.toString();
+            const item = this.getMediaById(key);
+            if (!key || !item) return;
+            const current = Array.isArray(this.state.db.watchedLog) ? this.state.db.watchedLog : [];
+            const existing = current.find(w => w.id?.toString() === key);
+            const filtered = current.filter(w => w.id?.toString() !== key);
+            if (this.isMediaWatched(key)) {
+                const at = bumpTs ? Date.now() : (existing?.at || Date.now());
+                filtered.unshift({ id: key, title: item.title, cat: item.cat, at });
+            }
+            this.state.db.watchedLog = filtered.slice(0, 120);
         },
 
         getWatchedCategoryCount(cat) {
@@ -720,8 +1211,14 @@
             document.getElementById('profile-bio-input').value = isOwn ? (this.state.profile.bio || '') : '';
             document.getElementById('profile-avatar-preview').src = avatar;
             document.getElementById('profile-bio-view').innerText = bio;
-            document.getElementById('pc-user-email').innerText = nick;
-            document.getElementById('pc-user-initials').innerText = nick.charAt(0).toUpperCase();
+            const ownNick = this.state.ownIdentity?.nickname || this.state.profile?.nickname || this.state.user?.email?.split('@')[0] || 'Uživatel';
+            const ownAvatar = this.state.ownIdentity?.avatar || this.state.profile?.avatar || '';
+            document.getElementById('pc-user-email').innerText = ownNick;
+            if (ownAvatar) {
+                document.getElementById('pc-user-initials').innerHTML = `<img src="${ownAvatar}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+            } else {
+                document.getElementById('pc-user-initials').innerText = ownNick.charAt(0).toUpperCase();
+            }
 
             document.getElementById('profile-nickname-input').disabled = !isOwn;
             document.getElementById('profile-avatar-input').disabled = !isOwn;
@@ -800,6 +1297,8 @@
             this.state.profile.nickname = nick;
             this.state.profile.avatar = avatar;
             this.state.profile.bio = bio;
+            this.state.ownIdentity.nickname = nick;
+            this.state.ownIdentity.avatar = avatar;
             await this.save();
             await this.syncReviewAuthors();
             await this.syncFallbackReviewAuthors();
@@ -1005,42 +1504,46 @@
             return Math.round((watched / total) * 100);
         },
 
-        renderGrid() {
-            const profileView = document.getElementById('profile-view');
-            const reviewsView = document.getElementById('reviews-view');
-            const mainGrid = document.getElementById('main-grid');
-            const pagination = document.getElementById('main-pagination');
-            if (this.state.view === 'profile') {
-                profileView.style.display = 'block';
-                reviewsView.style.display = 'none';
-                mainGrid.style.display = 'none';
-                pagination.style.display = 'none';
-                this.renderProfile();
-                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `PROFIL`;
-                return;
-            }
-            if (this.state.view === 'reviews') {
-                profileView.style.display = 'none';
-                reviewsView.style.display = 'block';
-                mainGrid.style.display = 'none';
-                pagination.style.display = 'none';
-                this.renderReviewsView();
-                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `RECENZE`;
-                return;
-            }
-            profileView.style.display = 'none';
-            reviewsView.style.display = 'none';
-            mainGrid.style.display = 'grid';
-            pagination.style.display = 'flex';
-            const grid = document.getElementById('main-grid');
-            let items = mediaData.filter(i => {
-                const m = i.title.toLowerCase().includes(this.state.query.toLowerCase());
-                if (this.state.view === 'all') return m;
-                if (this.state.view === 'favorites') return m && this.state.db.fav.includes(i.id.toString());
-                if (this.state.db.playlists[this.state.view]) return m && this.state.db.playlists[this.state.view].includes(i.id.toString());
-                return m && i.cat === this.state.view;
+        getFilteredMediaItems() {
+            const q = this.normalizeText(this.state.query);
+            const playlistSize = this.state.db.playlists[this.state.view]?.length || 0;
+            const sig = `${this.state.view}|${q}|${this.state.mediaRecords.length}|${this.state.db.fav.length}|${this.state.db.episodes.length}|${playlistSize}|${this.state.filters.sort}|${this.state.filters.platform}|${this.state.filters.minRating}|${this.state.filters.trend}`;
+            if (this.state.view !== 'all' && sig === this.state.filteredCacheSig) return this.state.filteredCacheItems;
+            let items = this.state.mediaRecords.filter(i => {
+                const m = i._qTitle.includes(q);
+                if (!m) return false;
+                if (this.state.view === 'favorites' && !this.state.db.fav.includes(i.id.toString())) return false;
+                if (this.state.db.playlists[this.state.view] && !this.state.db.playlists[this.state.view].includes(i.id.toString())) return false;
+                if (!['all','favorites'].includes(this.state.view) && !this.state.db.playlists[this.state.view] && i.cat !== this.state.view) return false;
+                if (this.state.filters.platform && !this.normalizePlatforms(i.platforms).includes(this.state.filters.platform)) return false;
+                const rating = Number(i.rating) || 0;
+                if (rating < Number(this.state.filters.minRating || 0)) return false;
+                return true;
             });
-            if (this.state.view === 'all') {
+
+            if (this.state.filters.trend === 'popular') {
+                items = items.sort((a,b) => this.getEngagementScore(b) - this.getEngagementScore(a));
+            } else if (this.state.filters.trend === 'discussed') {
+                items = items.sort((a,b) => ((this.state.globalRatings[b.id?.toString()]?.count || 0) - (this.state.globalRatings[a.id?.toString()]?.count || 0)));
+            } else if (this.state.filters.trend === 'hidden') {
+                items = items.sort((a,b) => {
+                    const ac = this.state.globalRatings[a.id?.toString()]?.count || 0;
+                    const bc = this.state.globalRatings[b.id?.toString()]?.count || 0;
+                    const ar = Number(a.rating) || 0;
+                    const br = Number(b.rating) || 0;
+                    return (br - bc * 0.2) - (ar - ac * 0.2);
+                });
+            }
+
+            if (this.state.filters.sort === 'mostRated') {
+                items = items.sort((a,b) => ((this.state.globalRatings[b.id?.toString()]?.count || 0) - (this.state.globalRatings[a.id?.toString()]?.count || 0)));
+            } else if (this.state.filters.sort === 'topRated') {
+                items = items.sort((a,b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+            } else if (this.state.filters.sort === 'mostOpened') {
+                items = items.sort((a,b) => ((this.state.localStats.opens[b.id?.toString()] || 0) - (this.state.localStats.opens[a.id?.toString()] || 0)));
+            } else if (this.state.filters.sort === 'newest') {
+                items = items.sort((a,b) => (Number(b.year) || 0) - (Number(a.year) || 0));
+            } else if (this.state.view === 'all') {
                 this.state.recoCache.watchedIds = new Set(this.state.db.episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0]));
                 this.state.recoCache.catPref = {
                     Movie: this.getWatchedCategoryCount('Movie'),
@@ -1049,6 +1552,83 @@
                 };
                 items = items.sort((a, b) => this.buildRecommendationScore(b) - this.buildRecommendationScore(a));
             }
+            if (this.state.view !== 'all') {
+                this.state.filteredCacheSig = sig;
+                this.state.filteredCacheItems = items;
+            }
+            return items;
+        },
+
+        tryMyLuck() {
+            if (this.state.view === 'profile' || this.state.view === 'reviews' || this.state.view === 'community') {
+                const allItems = this.state.mediaRecords.filter(Boolean);
+                if (!allItems.length) return alert('Nejsou načtena data.');
+                const pickAny = allItems[Math.floor(Math.random() * allItems.length)];
+                this.navigate('all');
+                return this.openModal(pickAny.id.toString());
+            }
+            const items = this.getFilteredMediaItems();
+            if (!items.length) {
+                alert('V aktuální kategorii nejsou žádné tituly pro náhodné doporučení.');
+                return;
+            }
+            const pick = items[Math.floor(Math.random() * items.length)];
+            this.openModal(pick.id.toString());
+        },
+
+        renderGrid() {
+            const profileView = document.getElementById('profile-view');
+            const reviewsView = document.getElementById('reviews-view');
+            const communityView = document.getElementById('community-view');
+            const mainGrid = document.getElementById('main-grid');
+            const pagination = document.getElementById('main-pagination');
+            const trendRoot = document.getElementById('trend-chips');
+            const filterPanel = document.getElementById('filter-panel');
+            if (this.state.view === 'profile') {
+                profileView.style.display = 'block';
+                reviewsView.style.display = 'none';
+                communityView.style.display = 'none';
+                mainGrid.style.display = 'none';
+                pagination.style.display = 'none';
+                this.renderProfile();
+                if (trendRoot) trendRoot.style.display = 'none';
+                if (filterPanel) filterPanel.style.display = 'none';
+                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `PROFIL`;
+                return;
+            }
+            if (this.state.view === 'community') {
+                profileView.style.display = 'none';
+                reviewsView.style.display = 'none';
+                communityView.style.display = 'block';
+                mainGrid.style.display = 'none';
+                pagination.style.display = 'none';
+                this.renderCommunityView();
+                if (trendRoot) trendRoot.style.display = 'none';
+                if (filterPanel) filterPanel.style.display = 'none';
+                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `KOMUNITA`;
+                return;
+            }
+            if (this.state.view === 'reviews') {
+                profileView.style.display = 'none';
+                reviewsView.style.display = 'block';
+                communityView.style.display = 'none';
+                mainGrid.style.display = 'none';
+                pagination.style.display = 'none';
+                this.renderReviewsView();
+                if (trendRoot) trendRoot.style.display = 'none';
+                if (filterPanel) filterPanel.style.display = 'none';
+                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `RECENZE`;
+                return;
+            }
+            profileView.style.display = 'none';
+            reviewsView.style.display = 'none';
+            communityView.style.display = 'none';
+            mainGrid.style.display = 'grid';
+            pagination.style.display = 'flex';
+            if (trendRoot) trendRoot.style.display = 'flex';
+            if (filterPanel) filterPanel.style.display = this.state.filterPanelOpen ? 'grid' : 'none';
+            const grid = document.getElementById('main-grid');
+            const items = this.getFilteredMediaItems();
             const totalPages = Math.ceil(items.length / this.state.perPage) || 1;
             const slice = items.slice((this.state.page - 1) * this.state.perPage, this.state.page * this.state.perPage);
             document.getElementById('page-info').innerText = `${this.state.page} / ${totalPages}`;
@@ -1075,6 +1655,7 @@
                         <div class="card-overlay">
                             <div style="font-size:0.65rem; font-weight:800; color:var(--accent)">${item.cat}</div>
                             <div style="font-weight:700; font-size:0.95rem">${item.title}</div>
+                            ${this.renderPlatformsHtml(item.platforms)}
                             <div class="user-rating-mini">
                                 ${Array.from({length: 5}, (_, i) => `<i class="fa-solid fa-star" style="opacity:${userRating > 0 && (i*2) < userRating ? 1 : 0.1}"></i>`).join('')}
                             </div>
@@ -1101,12 +1682,19 @@
 
 
         openModal(id) {
-            const item = mediaData.find(x => x.id == id); this.state.activeItem = item;
+            const item = this.getMediaById(id);
+            if (!item) return;
+            this.state.activeItem = item;
+            this.recordMediaOpen(item.id);
             document.getElementById('m-hero').style.backgroundImage = `url(${item.image})`;
             document.getElementById('m-title').innerText = item.title;
             document.getElementById('m-desc').innerText = item.overview || 'Bez popisu.';
             document.getElementById('m-cat').innerText = `${item.cat} • ${item.year || '?'}`;
+            const modalPlatforms = document.getElementById('m-platforms');
+            modalPlatforms.innerHTML = this.renderPlatformsHtml(item.platforms, 'modal');
+            modalPlatforms.style.display = modalPlatforms.innerHTML ? 'flex' : 'none';
             this.updateModalProgress(); this.renderStars(id); this.renderContent(item);
+            this.renderSimilarInModal(item);
             this.bindComments(id);
             this.endSearchFocus();
             document.getElementById('modal-engine').style.display = 'flex';
