@@ -532,6 +532,7 @@
             this.syncPlaylists();
             this.subscribeProfiles();
             this.subscribeAllReviews();
+            this.fetchCommunityProfiles('');
             this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
             await this.loadUserRecentReviews(this.state.activeProfileUid);
             this.renderProfile();
@@ -592,7 +593,8 @@
 
         prepareMediaCache() {
             if (this.state.mediaRecords.length > 0) return;
-            this.state.mediaRecords = (mediaData || []).map(item => ({
+            const source = Array.isArray(window.mediaData) ? window.mediaData : [];
+            this.state.mediaRecords = source.map(item => ({
                 ...item,
                 _id: item.id?.toString(),
                 _qTitle: this.normalizeText(item.title || '')
@@ -725,7 +727,7 @@
             FB.onSnapshot(FB.query(FB.collection(FB.db, 'comments'), FB.orderBy('createdAt', 'desc'), FB.limit(250)), async (snap) => {
                 const live = snap.docs.map(d => {
                     const c = d.data() || {};
-                    return { ...c, id: d.id, createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : Date.now() };
+                    return { ...c, id: d.id, createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : 0 };
                 });
                 const seen = new Set(live.map(r => `${r.uid || 'anon'}|${r.mediaId || ''}|${r.text || ''}`));
                 try {
@@ -750,9 +752,43 @@
                 } catch (_) {}
                 this.state.allReviews = live.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 300);
                 if (this.state.view === 'reviews') this.renderReviewsView();
-            }, () => {
-                // fallback: keep existing cache
+            }, async () => {
+                await this.loadAllReviewsFallback();
+                if (this.state.view === 'reviews') this.renderReviewsView();
             });
+        },
+
+        async loadAllReviewsFallback() {
+            const live = [];
+            try {
+                const snap = await FB.getDocs(FB.query(FB.collection(FB.db, 'comments'), FB.limit(250)));
+                snap.forEach(d => {
+                    const c = d.data() || {};
+                    live.push({ ...c, id: d.id, createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : 0 });
+                });
+            } catch (_) {}
+            try {
+                const fallbackSnap = await FB.getDocs(FB.query(FB.collection(FB.db, 'global_ratings'), FB.limit(250)));
+                const seen = new Set(live.map(r => `${r.uid || 'anon'}|${r.mediaId || ''}|${r.text || ''}`));
+                fallbackSnap.forEach(d => {
+                    const data = d.data() || {};
+                    const arr = Array.isArray(data.commentsFallback) ? data.commentsFallback : [];
+                    arr.forEach((c, i) => {
+                        const key = `${c.uid || 'anon'}|${c.mediaId || d.id}|${c.text || ''}`;
+                        if (seen.has(key)) return;
+                        seen.add(key);
+                        live.push({
+                            ...c,
+                            id: `fb-${d.id}-${i}`,
+                            mediaId: c.mediaId || d.id?.toString() || '',
+                            mediaTitle: c.mediaTitle || this.getMediaById(d.id)?.title || 'Titul',
+                            mediaCat: c.mediaCat || this.getMediaById(d.id)?.cat || '',
+                            createdAt: c.createdAt || 0
+                        });
+                    });
+                });
+            } catch (_) {}
+            this.state.allReviews = live.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 300);
         },
 
         async openProfile(uid) {
@@ -1270,6 +1306,7 @@
 
         renderReviewsView() {
             const root = document.getElementById('reviews-list-root');
+            if (!root) return;
             const sorted = [...this.state.allReviews].sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
             root.innerHTML = sorted.slice(0, 120).map(r => {
                 const dt = r.createdAt ? new Date(r.createdAt).toLocaleString('cs-CZ') : 'teď';
