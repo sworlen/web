@@ -602,6 +602,24 @@
                 return;
             }
             this.state.mediaLoadPromise = (async () => {
+                const loadLegacyScriptData = async () => {
+                    const candidates = ['./data.js', 'data.js', '../data.js'];
+                    for (const src of candidates) {
+                        try {
+                            await new Promise((resolve, reject) => {
+                                const s = document.createElement('script');
+                                s.src = src;
+                                s.async = true;
+                                s.onload = resolve;
+                                s.onerror = reject;
+                                document.head.appendChild(s);
+                            });
+                            if (Array.isArray(window.mediaData) && window.mediaData.length) return true;
+                        } catch (_) {}
+                    }
+                    return false;
+                };
+
                 const readCachedMedia = () => {
                     try {
                         const raw = localStorage.getItem('mediaDataCacheV1');
@@ -623,7 +641,7 @@
 
                 const fetchTextWithRetry = async (path) => {
                     const variants = [
-                        path,
+                        new URL(path, window.location.href).toString(),
                         `${path}${path.includes('?') ? '&' : '?'}_ts=${Date.now()}`
                     ];
                     let lastErr = null;
@@ -691,11 +709,14 @@
                     return values[0];
                 };
                 try {
-                    const paths = ['./data.json', 'data.json', '/data.json', './assets/data.json', './data/data.json'];
+                    const paths = ['./data.json', 'data.json', '../data.json', './assets/data.json', './data/data.json'];
                     let loaded = false;
                     for (const path of paths) {
                         try {
                             const rawText = await fetchTextWithRetry(path);
+                            if (/^\s*<!doctype html|^\s*<html/i.test(rawText)) {
+                                throw new Error('Path returned HTML instead of JSON');
+                            }
                             let parsed = [];
                             try {
                                 const data = JSON.parse(rawText);
@@ -712,6 +733,14 @@
                             }
                         } catch (e) {
                             console.warn(`Načtení datasetu selhalo pro ${path}`, e);
+                        }
+                    }
+                    if (!loaded) {
+                        const fromScript = await loadLegacyScriptData();
+                        if (fromScript && Array.isArray(window.mediaData) && window.mediaData.length) {
+                            writeCachedMedia(window.mediaData);
+                            this.state.mediaLoadError = '';
+                            loaded = true;
                         }
                     }
                     if (!loaded) {
