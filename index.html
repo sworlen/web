@@ -593,7 +593,9 @@
 
         prepareMediaCache() {
             if (this.state.mediaRecords.length > 0) return;
-            const source = Array.isArray(window.mediaData) ? window.mediaData : [];
+            const source = (typeof mediaData !== 'undefined' && Array.isArray(mediaData))
+                ? mediaData
+                : (Array.isArray(window.mediaData) ? window.mediaData : []);
             this.state.mediaRecords = source.map(item => ({
                 ...item,
                 _id: item.id?.toString(),
@@ -923,8 +925,14 @@
             document.getElementById('profile-bio-input').value = isOwn ? (this.state.profile.bio || '') : '';
             document.getElementById('profile-avatar-preview').src = avatar;
             document.getElementById('profile-bio-view').innerText = bio;
-            document.getElementById('pc-user-email').innerText = nick;
-            document.getElementById('pc-user-initials').innerText = nick.charAt(0).toUpperCase();
+            const ownNick = this.state.profile?.nickname || this.state.user?.email?.split('@')[0] || 'Uživatel';
+            const ownAvatar = this.state.profile?.avatar || '';
+            document.getElementById('pc-user-email').innerText = ownNick;
+            if (ownAvatar) {
+                document.getElementById('pc-user-initials').innerHTML = `<img src="${ownAvatar}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+            } else {
+                document.getElementById('pc-user-initials').innerText = ownNick.charAt(0).toUpperCase();
+            }
 
             document.getElementById('profile-nickname-input').disabled = !isOwn;
             document.getElementById('profile-avatar-input').disabled = !isOwn;
