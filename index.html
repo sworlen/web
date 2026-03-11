@@ -534,6 +534,7 @@
             this.syncPlaylists();
             this.subscribeProfiles();
             this.subscribeAllReviews();
+            this.fetchCommunityProfiles('');
             this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
 
             // Fast first paint: render grid immediately and load slower DB sections in background.
