@@ -69,6 +69,8 @@
         .search-input:focus { border-color: var(--accent); background: #000; box-shadow: 0 0 30px var(--accent-glow); }
         .search-wrapper.focused { z-index: 3200; }
         .search-wrapper.focused .search-input { border-color: var(--accent); background: #000; box-shadow: 0 0 35px var(--accent-glow); }
+        .luck-btn { border: 1px solid var(--glass-border); background: var(--glass); color: white; border-radius: 14px; padding: 12px 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.25s var(--smooth); white-space: nowrap; }
+        .luck-btn:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 22px var(--accent-glow); transform: translateY(-1px); }
 
         #search-results { position: absolute; top: calc(100% + 10px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; max-height: 400px; overflow-y: auto; display: none; z-index: 4200; box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: none; }
         .search-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
@@ -194,6 +196,7 @@
             .search-input { padding: 14px 20px 14px 45px; font-size: 16px; }
             .search-wrapper i { left: 15px; }
             #stats-counter { display: none; }
+            .luck-btn span { display: none; }
             .header-profile-btn span { display: none; }
 
             .viewport-content { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 100%; }
@@ -310,6 +313,10 @@
                    oninput="Core.handleSearch(this.value)" onfocus="Core.startSearchFocus(); Core.handleSearch(this.value)" onblur="setTimeout(() => Core.endSearchFocus(), 180)">
             <div id="search-results"></div>
         </div>
+        <button class="luck-btn" onclick="Core.tryMyLuck()" title="Náhodné doporučení podle aktuální kategorie">
+            <i class="fa-solid fa-dice"></i>
+            <span>Try my luck</span>
+        </button>
         <div id="stats-counter" style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.8rem; white-space: nowrap;">0 TITULŮ</div>
     </header>
 
@@ -1155,6 +1162,41 @@
             return Math.round((watched / total) * 100);
         },
 
+        getFilteredMediaItems() {
+            const q = this.normalizeText(this.state.query);
+            let items = this.state.mediaRecords.filter(i => {
+                const m = i._qTitle.includes(q);
+                if (this.state.view === 'all') return m;
+                if (this.state.view === 'favorites') return m && this.state.db.fav.includes(i.id.toString());
+                if (this.state.db.playlists[this.state.view]) return m && this.state.db.playlists[this.state.view].includes(i.id.toString());
+                return m && i.cat === this.state.view;
+            });
+            if (this.state.view === 'all') {
+                this.state.recoCache.watchedIds = new Set(this.state.db.episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0]));
+                this.state.recoCache.catPref = {
+                    Movie: this.getWatchedCategoryCount('Movie'),
+                    Serials: this.getWatchedCategoryCount('Serials'),
+                    Anime: this.getWatchedCategoryCount('Anime')
+                };
+                items = items.sort((a, b) => this.buildRecommendationScore(b) - this.buildRecommendationScore(a));
+            }
+            return items;
+        },
+
+        tryMyLuck() {
+            if (this.state.view === 'profile' || this.state.view === 'reviews') {
+                alert('Try my luck funguje v knihovně, oblíbených a seznamech.');
+                return;
+            }
+            const items = this.getFilteredMediaItems();
+            if (!items.length) {
+                alert('V aktuální kategorii nejsou žádné tituly pro náhodné doporučení.');
+                return;
+            }
+            const pick = items[Math.floor(Math.random() * items.length)];
+            this.openModal(pick.id.toString());
+        },
+
         renderGrid() {
             const profileView = document.getElementById('profile-view');
             const reviewsView = document.getElementById('reviews-view');
@@ -1183,23 +1225,7 @@
             mainGrid.style.display = 'grid';
             pagination.style.display = 'flex';
             const grid = document.getElementById('main-grid');
-            const q = this.normalizeText(this.state.query);
-            let items = this.state.mediaRecords.filter(i => {
-                const m = i._qTitle.includes(q);
-                if (this.state.view === 'all') return m;
-                if (this.state.view === 'favorites') return m && this.state.db.fav.includes(i.id.toString());
-                if (this.state.db.playlists[this.state.view]) return m && this.state.db.playlists[this.state.view].includes(i.id.toString());
-                return m && i.cat === this.state.view;
-            });
-            if (this.state.view === 'all') {
-                this.state.recoCache.watchedIds = new Set(this.state.db.episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0]));
-                this.state.recoCache.catPref = {
-                    Movie: this.getWatchedCategoryCount('Movie'),
-                    Serials: this.getWatchedCategoryCount('Serials'),
-                    Anime: this.getWatchedCategoryCount('Anime')
-                };
-                items = items.sort((a, b) => this.buildRecommendationScore(b) - this.buildRecommendationScore(a));
-            }
+            const items = this.getFilteredMediaItems();
             const totalPages = Math.ceil(items.length / this.state.perPage) || 1;
             const slice = items.slice((this.state.page - 1) * this.state.perPage, this.state.page * this.state.perPage);
             document.getElementById('page-info').innerText = `${this.state.page} / ${totalPages}`;
