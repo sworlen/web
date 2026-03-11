@@ -575,7 +575,13 @@
             this.renderProfile();
 
             this.deferTask(() => this.subscribeProfiles());
-            this.deferTask(() => this.subscribeAllReviews());
+            // Reviews should start immediately so Community Reviews view is never empty for too long.
+            this.subscribeAllReviews();
+            this.deferTask(() => {
+                this.loadAllReviewsFallback().then(() => {
+                    if (this.state.view === 'reviews') this.renderReviewsView();
+                }).catch(() => {});
+            });
             this.deferTask(() => this.fetchCommunityProfiles(''));
             this.deferTask(() => {
                 this.loadUserRecentReviews(this.state.activeProfileUid).then(() => {
@@ -595,13 +601,35 @@
                 return;
             }
             this.state.mediaLoadPromise = (async () => {
+                const extractArray = (payload) => {
+                    if (Array.isArray(payload)) return payload;
+                    if (!payload || typeof payload !== 'object') return [];
+                    const keyCandidates = ['mediaData', 'items', 'data', 'results', 'catalog', 'list'];
+                    for (const k of keyCandidates) {
+                        if (Array.isArray(payload[k])) return payload[k];
+                    }
+                    const values = Object.values(payload).filter(Array.isArray);
+                    if (!values.length) return [];
+                    values.sort((a,b) => b.length - a.length);
+                    return values[0];
+                };
                 try {
-                    const res = await fetch('./data.json', { cache: 'force-cache' });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const data = await res.json();
-                    if (Array.isArray(data)) window.mediaData = data;
-                    else if (Array.isArray(data?.mediaData)) window.mediaData = data.mediaData;
-                    else window.mediaData = [];
+                    const paths = ['./data.json', 'data.json'];
+                    let loaded = false;
+                    for (const path of paths) {
+                        try {
+                            const res = await fetch(path, { cache: 'force-cache' });
+                            if (!res.ok) continue;
+                            const data = await res.json();
+                            const parsed = extractArray(data);
+                            if (parsed.length) {
+                                window.mediaData = parsed;
+                                loaded = true;
+                                break;
+                            }
+                        } catch (_) {}
+                    }
+                    if (!loaded) window.mediaData = [];
                 } catch (e) {
                     console.warn('Nepodařilo se načíst data.json', e);
                     window.mediaData = Array.isArray(window.mediaData) ? window.mediaData : [];
@@ -660,6 +688,9 @@
             document.getElementById('view-title').innerText = label;
             if (view === 'profile' && !this.state.suppressOwnProfileLoad) this.openProfile(this.state.user?.uid);
             if (view === 'community') this.fetchCommunityProfiles(this.state.communityProfileQuery || '');
+            if (view === 'reviews' && !this.state.allReviews.length) {
+                this.loadAllReviewsFallback().then(() => this.renderReviewsView()).catch(() => {});
+            }
             this.renderGrid();
             this.endSearchFocus();
             if (window.innerWidth <= 900) this.toggleSidebar(false);
