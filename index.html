@@ -697,8 +697,20 @@
                     return out;
                 };
 
+                const extractArray = (payload) => {
+                    if (Array.isArray(payload)) return payload;
+                    if (!payload || typeof payload !== 'object') return [];
+                    const keyCandidates = ['mediaData', 'items', 'data', 'results', 'catalog', 'list'];
+                    for (const k of keyCandidates) {
+                        if (Array.isArray(payload[k])) return payload[k];
+                    }
+                    const values = Object.values(payload).filter(Array.isArray);
+                    if (!values.length) return [];
+                    values.sort((a,b) => b.length - a.length);
+                    return values[0];
+                };
                 try {
-                    const defaultPaths = ['./data.js', 'data.js', '../data.js'];
+                    const defaultPaths = ['./data.json', 'data.json', '../data.json', './assets/data.json', './data/data.json'];
                     const configuredPath = (window.MEDIA_DATA_PATH || '').toString().trim();
                     const paths = configuredPath ? [configuredPath, ...defaultPaths] : defaultPaths;
                     this.state.mediaLoadTriedPaths = paths.slice();
@@ -707,17 +719,14 @@
                         try {
                             const rawText = await fetchTextWithRetry(path);
                             if (/^\s*<!doctype html|^\s*<html/i.test(rawText)) {
-                                throw new Error('Path returned HTML instead of JS dataset');
-                            }
-                            const scriptMatch = rawText.match(/mediaData\s*=\s*(\[[\s\S]*\]);?/);
-                            if (!scriptMatch || !scriptMatch[1]) {
-                                throw new Error('Nenalezena mediaData v data.js');
+                                throw new Error('Path returned HTML instead of JSON');
                             }
                             let parsed = [];
                             try {
-                                parsed = JSON.parse(scriptMatch[1]);
+                                const data = JSON.parse(rawText);
+                                parsed = extractArray(data);
                             } catch (_) {
-                                parsed = tryParseLooseJsonList(scriptMatch[1]);
+                                parsed = tryParseLooseJsonList(rawText);
                             }
                             if (parsed.length) {
                                 window.mediaData = parsed;
@@ -742,19 +751,19 @@
                         const cached = readCachedMedia();
                         if (cached.length) {
                             window.mediaData = cached;
-                            this.state.mediaLoadError = 'Používám offline cache datasetu (data.js se teď nepodařilo načíst).';
+                            this.state.mediaLoadError = 'Používám offline cache datasetu (data.json se teď nepodařilo načíst).';
                         } else {
                             window.mediaData = [];
-                            this.state.mediaLoadError = `Nepodařilo se najít platný dataset. Zkontroluj cestu k JS datasetu (${paths.join(', ')}).`;
+                            this.state.mediaLoadError = `Nepodařilo se najít platný dataset. Zkontroluj cestu k JSON (${paths.join(', ')}).`;
                         }
                     }
                 } catch (e) {
-                    console.warn('Nepodařilo se načíst data.js', e);
+                    console.warn('Nepodařilo se načíst data.json', e);
                     const fallback = Array.isArray(window.mediaData) && window.mediaData.length ? window.mediaData : readCachedMedia();
                     window.mediaData = Array.isArray(fallback) ? fallback : [];
                     this.state.mediaLoadError = window.mediaData.length
-                        ? 'Načtení data.js selhalo, používám fallback data.'
-                        : 'Načtení data.js selhalo.';
+                        ? 'Načtení data.json selhalo, používám fallback data.'
+                        : 'Načtení data.json selhalo.';
                 }
             })();
             await this.state.mediaLoadPromise;
