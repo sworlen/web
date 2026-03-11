@@ -72,6 +72,19 @@
         .luck-btn { border: 1px solid var(--glass-border); background: var(--glass); color: white; border-radius: 14px; padding: 12px 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.25s var(--smooth); white-space: nowrap; }
         .luck-btn:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 22px var(--accent-glow); transform: translateY(-1px); }
 
+        .filter-toggle-btn { border: 1px solid var(--glass-border); background: var(--glass); color: white; border-radius: 14px; padding: 12px 16px; font-weight: 700; cursor: pointer; }
+        .filter-panel { margin: 16px 0 22px; border: 1px solid var(--glass-border); background: rgba(15, 23, 42, 0.55); border-radius: 18px; padding: 14px; display: none; gap: 12px; }
+        .filter-panel.open { display: grid; }
+        .filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .filter-select { background: rgba(255,255,255,0.06); color: white; border: 1px solid var(--glass-border); border-radius: 10px; padding: 10px 12px; }
+        .trend-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .trend-chip { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--glass-border); cursor: pointer; background: rgba(255,255,255,0.04); font-size: 0.78rem; font-weight: 700; }
+        .similar-wrap { margin-top: 18px; }
+        .similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 10px; }
+        .similar-card { border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; cursor: pointer; background: rgba(255,255,255,0.03); }
+        .similar-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; display:block; }
+        .similar-title { padding: 8px; font-size: 0.82rem; font-weight: 700; }
+
         #search-results { position: absolute; top: calc(100% + 10px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; max-height: 400px; overflow-y: auto; display: none; z-index: 4200; box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: none; }
         .search-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
         .search-item:hover { background: var(--glass-heavy); }
@@ -101,6 +114,11 @@
         .poster-wrapper { position: relative; width: 100%; aspect-ratio: 2/3; border-radius: 22px; overflow: hidden; border: 1px solid var(--glass-border); }
         .poster-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; padding-bottom: 25px; }
+        .platform-chips { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+        .platform-chip { padding: 4px 8px; border-radius: 999px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.08); font-size: 0.66rem; font-weight: 700; line-height: 1; }
+
+        .modal-platforms { margin: 0 0 24px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .modal-platform-chip { padding: 7px 11px; border-radius: 999px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: #dbeafe; font-size: 0.78rem; font-weight: 700; }
 
         /* Modals */
         #modal-engine, #playlist-picker, #confirm-overlay, #review-editor-overlay { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.9); backdrop-filter: blur(30px); display: none; align-items: center; justify-content: center; padding: 30px; }
@@ -325,11 +343,32 @@
             <i class="fa-solid fa-dice"></i>
             <span>Try my luck</span>
         </button>
+        <button class="filter-toggle-btn" onclick="Core.toggleFilterPanel()"><i class="fa-solid fa-sliders"></i> Filtry</button>
         <div id="stats-counter" style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.8rem; white-space: nowrap;">0 TITULŮ</div>
     </header>
 
     <div class="viewport-content">
-        <h2 id="view-title" style="font-size: 3rem; font-weight: 900; margin-bottom: 40px; letter-spacing: -2px;">Všechno</h2>
+        <h2 id="view-title" style="font-size: 3rem; font-weight: 900; margin-bottom: 22px; letter-spacing: -2px;">Všechno</h2>
+        <div id="trend-chips" class="trend-chips"></div>
+        <div id="filter-panel" class="filter-panel">
+            <div class="filter-row">
+                <select id="filter-sort" class="filter-select" onchange="Core.applyFilters()">
+                    <option value="recommended">Doporučené</option>
+                    <option value="mostRated">Nejhodnocenější (počtem)</option>
+                    <option value="topRated">Nejlépe hodnocené</option>
+                    <option value="mostOpened">Nejklikanější</option>
+                    <option value="newest">Nejnovější</option>
+                </select>
+                <select id="filter-platform" class="filter-select" onchange="Core.applyFilters()">
+                    <option value="">Všechny platformy</option>
+                </select>
+                <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-dim)">Min. rating
+                    <input id="filter-min-rating" type="range" min="0" max="10" step="0.5" value="0" oninput="Core.applyFilters()">
+                    <span id="filter-min-rating-value">0</span>
+                </label>
+                <button class="page-btn" style="padding:10px 14px" onclick="Core.resetFilters()">Reset</button>
+            </div>
+        </div>
         <div class="media-grid" id="main-grid"></div>
         <div class="pagination" id="main-pagination">
             <button class="page-btn" id="prev-btn" onclick="Core.changePage(-1)">Zpět</button>
@@ -404,7 +443,9 @@
             <div class="nav-label" style="margin-left:0">Tvoje hodnocení</div>
             <div class="star-container" id="m-stars"></div>
             <p id="m-desc" style="color: #94a3b8; line-height: 1.6; margin-bottom: 30px;"></p>
+            <div id="m-platforms" class="modal-platforms"></div>
             <div id="m-content-root"></div>
+            <div id="m-similar" class="similar-wrap"></div>
             <div class="comments-wrap">
                 <div class="nav-label" style="margin:0 0 12px 0">Recenze komunity</div>
                 <div class="comment-form">
@@ -514,8 +555,14 @@
             }
             const displayName = Core.state.profile.nickname || 'Uživatel';
             const initial = displayName.charAt(0).toUpperCase();
+            Core.state.ownIdentity.nickname = displayName;
+            Core.state.ownIdentity.avatar = Core.state.profile.avatar || '';
             document.getElementById('pc-user-email').innerText = displayName;
-            document.getElementById('pc-user-initials').innerText = initial;
+            if (Core.state.ownIdentity.avatar) {
+                document.getElementById('pc-user-initials').innerHTML = `<img src="${Core.state.ownIdentity.avatar}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+            } else {
+                document.getElementById('pc-user-initials').innerText = initial;
+            }
             Core.state.user = { uid: user.uid, email };
             Core.state.activeProfileUid = user.uid;
             document.getElementById('auth-overlay').style.display = 'none';
@@ -562,19 +609,26 @@
             filteredCacheSig: '',
             filteredCacheItems: [],
             normCache: new Map(),
-            suppressOwnProfileLoad: false
+            suppressOwnProfileLoad: false,
+            filterPanelOpen: false,
+            filters: { sort: 'recommended', platform: '', minRating: 0, trend: 'all' },
+            localStats: { opens: {} },
+            ownIdentity: { nickname: 'Uživatel', avatar: '' }
         },
 
         async init() {
             this.state.mediaBootstrapStarted = true;
             await this.loadMediaData();
             this.prepareMediaCache();
+            this.loadLocalStats();
             this.syncPlaylists();
             this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
+            this.populateFilterOptions();
 
             // Fast first paint: render grid immediately and load slower DB sections in background.
             this.renderGrid();
             this.renderProfile();
+            this.renderTrendChips();
 
             this.deferTask(() => this.subscribeProfiles());
             // Reviews should start immediately so Community Reviews view is never empty for too long.
@@ -597,14 +651,23 @@
         },
 
         async loadMediaData() {
-            if (Array.isArray(window.mediaData) && window.mediaData.length) return;
+            const readGlobalMedia = () => {
+                try {
+                    if (typeof mediaData !== 'undefined' && Array.isArray(mediaData)) return mediaData;
+                } catch (_) {}
+                return Array.isArray(window.mediaData) ? window.mediaData : [];
+            };
+
+            if (readGlobalMedia().length) {
+                window.mediaData = readGlobalMedia();
+                return;
+            }
             if (this.state.mediaLoadPromise) {
                 await this.state.mediaLoadPromise;
                 return;
             }
             this.state.mediaLoadPromise = (async () => {
-                const loadLegacyScriptData = async () => {
-                    const candidates = ['./data.js', 'data.js', '../data.js'];
+                const loadLegacyScriptData = async (candidates) => {
                     for (const src of candidates) {
                         try {
                             await new Promise((resolve, reject) => {
@@ -615,7 +678,11 @@
                                 s.onerror = reject;
                                 document.head.appendChild(s);
                             });
-                            if (Array.isArray(window.mediaData) && window.mediaData.length) return true;
+                            const found = readGlobalMedia();
+                            if (found.length) {
+                                window.mediaData = found;
+                                return true;
+                            }
                         } catch (_) {}
                     }
                     return false;
@@ -697,52 +764,46 @@
                     return out;
                 };
 
-                const extractArray = (payload) => {
-                    if (Array.isArray(payload)) return payload;
-                    if (!payload || typeof payload !== 'object') return [];
-                    const keyCandidates = ['mediaData', 'items', 'data', 'results', 'catalog', 'list'];
-                    for (const k of keyCandidates) {
-                        if (Array.isArray(payload[k])) return payload[k];
-                    }
-                    const values = Object.values(payload).filter(Array.isArray);
-                    if (!values.length) return [];
-                    values.sort((a,b) => b.length - a.length);
-                    return values[0];
-                };
                 try {
-                    const defaultPaths = ['./data.json', 'data.json', '../data.json', './assets/data.json', './data/data.json'];
+                    const defaultPaths = ['./data.js', 'data.js', '../data.js'];
                     const configuredPath = (window.MEDIA_DATA_PATH || '').toString().trim();
                     const paths = configuredPath ? [configuredPath, ...defaultPaths] : defaultPaths;
                     this.state.mediaLoadTriedPaths = paths.slice();
-                    let loaded = false;
-                    for (const path of paths) {
-                        try {
-                            const rawText = await fetchTextWithRetry(path);
-                            if (/^\s*<!doctype html|^\s*<html/i.test(rawText)) {
-                                throw new Error('Path returned HTML instead of JSON');
-                            }
-                            let parsed = [];
+                    let loaded = await loadLegacyScriptData(paths);
+                    if (!loaded) {
+                        for (const path of paths) {
                             try {
-                                const data = JSON.parse(rawText);
-                                parsed = extractArray(data);
-                            } catch (_) {
-                                parsed = tryParseLooseJsonList(rawText);
+                                const rawText = await fetchTextWithRetry(path);
+                                if (/^\s*<!doctype html|^\s*<html/i.test(rawText)) {
+                                    throw new Error('Path returned HTML instead of JS dataset');
+                                }
+                                const scriptMatch = rawText.match(/mediaData\s*=\s*(\[[\s\S]*?\])\s*;?/);
+                                if (!scriptMatch || !scriptMatch[1]) {
+                                    throw new Error('Nenalezena mediaData v data.js');
+                                }
+                                let parsed = [];
+                                try {
+                                    parsed = JSON.parse(scriptMatch[1]);
+                                } catch (_) {
+                                    parsed = tryParseLooseJsonList(scriptMatch[1]);
+                                }
+                                if (parsed.length) {
+                                    window.mediaData = parsed;
+                                    writeCachedMedia(parsed);
+                                    this.state.mediaLoadError = '';
+                                    loaded = true;
+                                    break;
+                                }
+                            } catch (e) {
+                                console.warn(`Načtení datasetu selhalo pro ${path}`, e);
                             }
-                            if (parsed.length) {
-                                window.mediaData = parsed;
-                                writeCachedMedia(parsed);
-                                this.state.mediaLoadError = '';
-                                loaded = true;
-                                break;
-                            }
-                        } catch (e) {
-                            console.warn(`Načtení datasetu selhalo pro ${path}`, e);
                         }
                     }
                     if (!loaded) {
-                        const fromScript = await loadLegacyScriptData();
-                        if (fromScript && Array.isArray(window.mediaData) && window.mediaData.length) {
-                            writeCachedMedia(window.mediaData);
+                        const scriptData = readGlobalMedia();
+                        if (scriptData.length) {
+                            window.mediaData = scriptData;
+                            writeCachedMedia(scriptData);
                             this.state.mediaLoadError = '';
                             loaded = true;
                         }
@@ -751,19 +812,19 @@
                         const cached = readCachedMedia();
                         if (cached.length) {
                             window.mediaData = cached;
-                            this.state.mediaLoadError = 'Používám offline cache datasetu (data.json se teď nepodařilo načíst).';
+                            this.state.mediaLoadError = 'Používám offline cache datasetu (data.js se teď nepodařilo načíst).';
                         } else {
                             window.mediaData = [];
-                            this.state.mediaLoadError = `Nepodařilo se najít platný dataset. Zkontroluj cestu k JSON (${paths.join(', ')}).`;
+                            this.state.mediaLoadError = `Nepodařilo se najít platný dataset. Zkontroluj cestu k JS datasetu (${paths.join(', ')}).`;
                         }
                     }
                 } catch (e) {
-                    console.warn('Nepodařilo se načíst data.json', e);
-                    const fallback = Array.isArray(window.mediaData) && window.mediaData.length ? window.mediaData : readCachedMedia();
+                    console.warn('Nepodařilo se načíst data.js', e);
+                    const fallback = readGlobalMedia().length ? readGlobalMedia() : readCachedMedia();
                     window.mediaData = Array.isArray(fallback) ? fallback : [];
                     this.state.mediaLoadError = window.mediaData.length
-                        ? 'Načtení data.json selhalo, používám fallback data.'
-                        : 'Načtení data.json selhalo.';
+                        ? 'Načtení data.js selhalo, používám fallback data.'
+                        : 'Načtení data.js selhalo.';
                 }
             })();
             await this.state.mediaLoadPromise;
@@ -831,6 +892,145 @@
             return this.state.mediaById.get(id?.toString()) || null;
         },
 
+        loadLocalStats() {
+            try {
+                const raw = localStorage.getItem('mediaVaultLocalStatsV1');
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') this.state.localStats = { opens: parsed.opens || {} };
+            } catch (_) {}
+        },
+
+        saveLocalStats() {
+            try {
+                localStorage.setItem('mediaVaultLocalStatsV1', JSON.stringify(this.state.localStats));
+            } catch (_) {}
+        },
+
+        recordMediaOpen(id) {
+            const key = id?.toString();
+            if (!key) return;
+            const current = this.state.localStats.opens[key] || 0;
+            this.state.localStats.opens[key] = current + 1;
+            this.saveLocalStats();
+        },
+
+        toggleFilterPanel() {
+            this.state.filterPanelOpen = !this.state.filterPanelOpen;
+            const panel = document.getElementById('filter-panel');
+            if (panel) panel.classList.toggle('open', this.state.filterPanelOpen);
+        },
+
+        applyFilters() {
+            const sort = document.getElementById('filter-sort');
+            const platform = document.getElementById('filter-platform');
+            const minRating = document.getElementById('filter-min-rating');
+            const out = document.getElementById('filter-min-rating-value');
+            this.state.filters.sort = sort ? sort.value : 'recommended';
+            this.state.filters.platform = platform ? platform.value : '';
+            this.state.filters.minRating = minRating ? Number(minRating.value || 0) : 0;
+            if (out) out.innerText = this.state.filters.minRating.toString();
+            this.state.page = 1;
+            this.renderGrid();
+        },
+
+        resetFilters() {
+            const sort = document.getElementById('filter-sort');
+            const platform = document.getElementById('filter-platform');
+            const minRating = document.getElementById('filter-min-rating');
+            if (sort) sort.value = 'recommended';
+            if (platform) platform.value = '';
+            if (minRating) minRating.value = '0';
+            this.state.filters = { ...this.state.filters, sort: 'recommended', platform: '', minRating: 0, trend: 'all' };
+            this.applyFilters();
+            this.renderTrendChips();
+        },
+
+        populateFilterOptions() {
+            const el = document.getElementById('filter-platform');
+            if (!el) return;
+            const set = new Set();
+            this.state.mediaRecords.forEach(item => this.normalizePlatforms(item.platforms).forEach(p => set.add(p)));
+            const opts = Array.from(set).sort((a,b)=>a.localeCompare(b,'cs'));
+            el.innerHTML = '<option value="">Všechny platformy</option>' + opts.map(p => `<option value="${p}">${p}</option>`).join('');
+        },
+
+        renderTrendChips() {
+            const root = document.getElementById('trend-chips');
+            if (!root) return;
+            const trends = [
+                { id: 'all', label: 'Všechno' },
+                { id: 'popular', label: 'Nejhledanější' },
+                { id: 'discussed', label: 'Nejvíc hodnocené' },
+                { id: 'hidden', label: 'Skryté perly' }
+            ];
+            root.innerHTML = trends.map(t => `<button class="trend-chip" style="${this.state.filters.trend===t.id?'border-color:var(--accent);color:var(--accent);':''}" onclick="Core.setTrend('${t.id}')">${t.label}</button>`).join('');
+        },
+
+        setTrend(id) {
+            this.state.filters.trend = id;
+            this.state.page = 1;
+            this.renderTrendChips();
+            this.renderGrid();
+        },
+
+        getEngagementScore(item) {
+            const g = this.state.globalRatings[item.id?.toString()] || {};
+            const opens = this.state.localStats.opens[item.id?.toString()] || 0;
+            const ratedCount = Number(g.count || 0);
+            return (ratedCount * 10) + opens;
+        },
+
+        getSimilarItems(item, limit = 8) {
+            if (!item) return [];
+            const baseCast = Array.isArray(item.cast) ? item.cast : [];
+            const basePlatforms = this.normalizePlatforms(item.platforms);
+            return this.state.mediaRecords
+                .filter(x => x.id?.toString() !== item.id?.toString())
+                .map(x => {
+                    let s = 0;
+                    if (x.cat === item.cat) s += 5;
+                    const cast = Array.isArray(x.cast) ? x.cast : [];
+                    const overlapCast = cast.filter(c => baseCast.includes(c)).length;
+                    const overlapPlatforms = this.normalizePlatforms(x.platforms).filter(p => basePlatforms.includes(p)).length;
+                    s += overlapCast * 3 + overlapPlatforms * 2;
+                    s += (Number(x.rating) || 0) / 2;
+                    return { item: x, score: s };
+                })
+                .sort((a,b)=>b.score-a.score)
+                .slice(0, limit)
+                .map(x => x.item);
+        },
+
+        renderSimilarInModal(item) {
+            const root = document.getElementById('m-similar');
+            if (!root) return;
+            const similar = this.getSimilarItems(item, 8);
+            if (!similar.length) {
+                root.innerHTML = '';
+                return;
+            }
+            root.innerHTML = `<div class="nav-label" style="margin:0 0 10px 0">Podobné tituly</div><div class="similar-grid">${similar.map(s => `<div class="similar-card" onclick="Core.openModal('${s.id}')"><img src="${s.image}" alt="${s.title}"><div class="similar-title">${s.title}</div></div>`).join('')}</div>`;
+        },
+
+        normalizePlatforms(value) {
+            if (!Array.isArray(value)) return [];
+            return value
+                .map(p => (p || '').toString().trim())
+                .filter(Boolean);
+        },
+
+        renderPlatformsHtml(platforms, variant = 'card') {
+            const clean = this.normalizePlatforms(platforms);
+            if (!clean.length) return '';
+            if (variant === 'modal') {
+                return clean.map(platform => `<span class="modal-platform-chip">${platform}</span>`).join('');
+            }
+            const preview = clean.slice(0, 3);
+            const overflow = clean.length > 3 ? `<span class="platform-chip">+${clean.length - 3}</span>` : '';
+            return `<div class="platform-chips">${preview.map(platform => `<span class="platform-chip">${platform}</span>`).join('')}${overflow}</div>`;
+        },
+
         prepareMediaCache() {
             if (this.state.mediaRecords.length > 0) return;
             const source = (typeof mediaData !== 'undefined' && Array.isArray(mediaData))
@@ -868,6 +1068,8 @@
                 this.prepareMediaCache();
                 if (this.state.mediaRecords.length) {
                     clearInterval(timer);
+                    this.populateFilterOptions();
+                    this.renderTrendChips();
                     this.renderGrid();
                     return;
                 }
@@ -1202,8 +1404,8 @@
             document.getElementById('profile-bio-input').value = isOwn ? (this.state.profile.bio || '') : '';
             document.getElementById('profile-avatar-preview').src = avatar;
             document.getElementById('profile-bio-view').innerText = bio;
-            const ownNick = this.state.profile?.nickname || this.state.user?.email?.split('@')[0] || 'Uživatel';
-            const ownAvatar = this.state.profile?.avatar || '';
+            const ownNick = this.state.ownIdentity?.nickname || this.state.profile?.nickname || this.state.user?.email?.split('@')[0] || 'Uživatel';
+            const ownAvatar = this.state.ownIdentity?.avatar || this.state.profile?.avatar || '';
             document.getElementById('pc-user-email').innerText = ownNick;
             if (ownAvatar) {
                 document.getElementById('pc-user-initials').innerHTML = `<img src="${ownAvatar}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
@@ -1259,6 +1461,8 @@
             this.state.profile.nickname = nick;
             this.state.profile.avatar = avatar;
             this.state.profile.bio = bio;
+            this.state.ownIdentity.nickname = nick;
+            this.state.ownIdentity.avatar = avatar;
             await this.save();
             await this.syncReviewAuthors();
             await this.syncFallbackReviewAuthors();
@@ -1477,16 +1681,43 @@
         getFilteredMediaItems() {
             const q = this.normalizeText(this.state.query);
             const playlistSize = this.state.db.playlists[this.state.view]?.length || 0;
-            const sig = `${this.state.view}|${q}|${this.state.mediaRecords.length}|${this.state.db.fav.length}|${this.state.db.episodes.length}|${playlistSize}`;
+            const sig = `${this.state.view}|${q}|${this.state.mediaRecords.length}|${this.state.db.fav.length}|${this.state.db.episodes.length}|${playlistSize}|${this.state.filters.sort}|${this.state.filters.platform}|${this.state.filters.minRating}|${this.state.filters.trend}`;
             if (this.state.view !== 'all' && sig === this.state.filteredCacheSig) return this.state.filteredCacheItems;
             let items = this.state.mediaRecords.filter(i => {
                 const m = i._qTitle.includes(q);
-                if (this.state.view === 'all') return m;
-                if (this.state.view === 'favorites') return m && this.state.db.fav.includes(i.id.toString());
-                if (this.state.db.playlists[this.state.view]) return m && this.state.db.playlists[this.state.view].includes(i.id.toString());
-                return m && i.cat === this.state.view;
+                if (!m) return false;
+                if (this.state.view === 'favorites' && !this.state.db.fav.includes(i.id.toString())) return false;
+                if (this.state.db.playlists[this.state.view] && !this.state.db.playlists[this.state.view].includes(i.id.toString())) return false;
+                if (!['all','favorites'].includes(this.state.view) && !this.state.db.playlists[this.state.view] && i.cat !== this.state.view) return false;
+                if (this.state.filters.platform && !this.normalizePlatforms(i.platforms).includes(this.state.filters.platform)) return false;
+                const rating = Number(i.rating) || 0;
+                if (rating < Number(this.state.filters.minRating || 0)) return false;
+                return true;
             });
-            if (this.state.view === 'all') {
+
+            if (this.state.filters.trend === 'popular') {
+                items = items.sort((a,b) => this.getEngagementScore(b) - this.getEngagementScore(a));
+            } else if (this.state.filters.trend === 'discussed') {
+                items = items.sort((a,b) => ((this.state.globalRatings[b.id?.toString()]?.count || 0) - (this.state.globalRatings[a.id?.toString()]?.count || 0)));
+            } else if (this.state.filters.trend === 'hidden') {
+                items = items.sort((a,b) => {
+                    const ac = this.state.globalRatings[a.id?.toString()]?.count || 0;
+                    const bc = this.state.globalRatings[b.id?.toString()]?.count || 0;
+                    const ar = Number(a.rating) || 0;
+                    const br = Number(b.rating) || 0;
+                    return (br - bc * 0.2) - (ar - ac * 0.2);
+                });
+            }
+
+            if (this.state.filters.sort === 'mostRated') {
+                items = items.sort((a,b) => ((this.state.globalRatings[b.id?.toString()]?.count || 0) - (this.state.globalRatings[a.id?.toString()]?.count || 0)));
+            } else if (this.state.filters.sort === 'topRated') {
+                items = items.sort((a,b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+            } else if (this.state.filters.sort === 'mostOpened') {
+                items = items.sort((a,b) => ((this.state.localStats.opens[b.id?.toString()] || 0) - (this.state.localStats.opens[a.id?.toString()] || 0)));
+            } else if (this.state.filters.sort === 'newest') {
+                items = items.sort((a,b) => (Number(b.year) || 0) - (Number(a.year) || 0));
+            } else if (this.state.view === 'all') {
                 this.state.recoCache.watchedIds = new Set(this.state.db.episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0]));
                 this.state.recoCache.catPref = {
                     Movie: this.getWatchedCategoryCount('Movie'),
@@ -1504,8 +1735,11 @@
 
         tryMyLuck() {
             if (this.state.view === 'profile' || this.state.view === 'reviews' || this.state.view === 'community') {
-                alert('Try my luck funguje v knihovně, oblíbených a seznamech.');
-                return;
+                const allItems = this.state.mediaRecords.filter(Boolean);
+                if (!allItems.length) return alert('Nejsou načtena data.');
+                const pickAny = allItems[Math.floor(Math.random() * allItems.length)];
+                this.navigate('all');
+                return this.openModal(pickAny.id.toString());
             }
             const items = this.getFilteredMediaItems();
             if (!items.length) {
@@ -1522,6 +1756,8 @@
             const communityView = document.getElementById('community-view');
             const mainGrid = document.getElementById('main-grid');
             const pagination = document.getElementById('main-pagination');
+            const trendRoot = document.getElementById('trend-chips');
+            const filterPanel = document.getElementById('filter-panel');
             if (this.state.view === 'profile') {
                 profileView.style.display = 'block';
                 reviewsView.style.display = 'none';
@@ -1529,6 +1765,8 @@
                 mainGrid.style.display = 'none';
                 pagination.style.display = 'none';
                 this.renderProfile();
+                if (trendRoot) trendRoot.style.display = 'none';
+                if (filterPanel) filterPanel.style.display = 'none';
                 if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `PROFIL`;
                 return;
             }
@@ -1539,6 +1777,8 @@
                 mainGrid.style.display = 'none';
                 pagination.style.display = 'none';
                 this.renderCommunityView();
+                if (trendRoot) trendRoot.style.display = 'none';
+                if (filterPanel) filterPanel.style.display = 'none';
                 if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `KOMUNITA`;
                 return;
             }
@@ -1549,6 +1789,8 @@
                 mainGrid.style.display = 'none';
                 pagination.style.display = 'none';
                 this.renderReviewsView();
+                if (trendRoot) trendRoot.style.display = 'none';
+                if (filterPanel) filterPanel.style.display = 'none';
                 if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `RECENZE`;
                 return;
             }
@@ -1557,6 +1799,8 @@
             communityView.style.display = 'none';
             mainGrid.style.display = 'grid';
             pagination.style.display = 'flex';
+            if (trendRoot) trendRoot.style.display = 'flex';
+            if (filterPanel) filterPanel.style.display = this.state.filterPanelOpen ? 'grid' : 'none';
             const grid = document.getElementById('main-grid');
             const items = this.getFilteredMediaItems();
             const totalPages = Math.ceil(items.length / this.state.perPage) || 1;
@@ -1590,6 +1834,7 @@
                         <div class="card-overlay">
                             <div style="font-size:0.65rem; font-weight:800; color:var(--accent)">${item.cat}</div>
                             <div style="font-weight:700; font-size:0.95rem">${item.title}</div>
+                            ${this.renderPlatformsHtml(item.platforms)}
                             <div class="user-rating-mini">
                                 ${Array.from({length: 5}, (_, i) => `<i class="fa-solid fa-star" style="opacity:${userRating > 0 && (i*2) < userRating ? 1 : 0.1}"></i>`).join('')}
                             </div>
@@ -1623,11 +1868,16 @@
             const item = this.getMediaById(id);
             if (!item) return;
             this.state.activeItem = item;
+            this.recordMediaOpen(item.id);
             document.getElementById('m-hero').style.backgroundImage = `url(${item.image})`;
             document.getElementById('m-title').innerText = item.title;
             document.getElementById('m-desc').innerText = item.overview || 'Bez popisu.';
             document.getElementById('m-cat').innerText = `${item.cat} • ${item.year || '?'}`;
+            const modalPlatforms = document.getElementById('m-platforms');
+            modalPlatforms.innerHTML = this.renderPlatformsHtml(item.platforms, 'modal');
+            modalPlatforms.style.display = modalPlatforms.innerHTML ? 'flex' : 'none';
             this.updateModalProgress(); this.renderStars(id); this.renderContent(item);
+            this.renderSimilarInModal(item);
             this.bindComments(id);
             this.endSearchFocus();
             document.getElementById('modal-engine').style.display = 'flex';
