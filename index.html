@@ -556,7 +556,6 @@
             mediaBootstrapStarted: false,
             mediaLoadPromise: null,
             mediaLoadError: '',
-            mediaLoadTriedPaths: [],
             confirmAction: null,
             reviewEditTarget: null,
             filteredCacheSig: '',
@@ -710,10 +709,7 @@
                     return values[0];
                 };
                 try {
-                    const defaultPaths = ['./data.json', 'data.json', '../data.json', './assets/data.json', './data/data.json'];
-                    const configuredPath = (window.MEDIA_DATA_PATH || '').toString().trim();
-                    const paths = configuredPath ? [configuredPath, ...defaultPaths] : defaultPaths;
-                    this.state.mediaLoadTriedPaths = paths.slice();
+                    const paths = ['./data.json', 'data.json', '../data.json', './assets/data.json', './data/data.json'];
                     let loaded = false;
                     for (const path of paths) {
                         try {
@@ -754,7 +750,7 @@
                             this.state.mediaLoadError = 'Používám offline cache datasetu (data.json se teď nepodařilo načíst).';
                         } else {
                             window.mediaData = [];
-                            this.state.mediaLoadError = `Nepodařilo se najít platný dataset. Zkontroluj cestu k JSON (${paths.join(', ')}).`;
+                            this.state.mediaLoadError = 'Nepodařilo se najít platný dataset (data.json).';
                         }
                     }
                 } catch (e) {
