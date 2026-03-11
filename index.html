@@ -601,7 +601,17 @@
         },
 
         async loadMediaData() {
-            if (Array.isArray(window.mediaData) && window.mediaData.length) return;
+            const readGlobalMedia = () => {
+                try {
+                    if (typeof mediaData !== 'undefined' && Array.isArray(mediaData)) return mediaData;
+                } catch (_) {}
+                return Array.isArray(window.mediaData) ? window.mediaData : [];
+            };
+
+            if (readGlobalMedia().length) {
+                window.mediaData = readGlobalMedia();
+                return;
+            }
             if (this.state.mediaLoadPromise) {
                 await this.state.mediaLoadPromise;
                 return;
@@ -618,7 +628,11 @@
                                 s.onerror = reject;
                                 document.head.appendChild(s);
                             });
-                            if (Array.isArray(window.mediaData) && window.mediaData.length) return true;
+                            const found = readGlobalMedia();
+                            if (found.length) {
+                                window.mediaData = found;
+                                return true;
+                            }
                         } catch (_) {}
                     }
                     return false;
@@ -736,8 +750,10 @@
                         }
                     }
                     if (!loaded) {
-                        if (Array.isArray(window.mediaData) && window.mediaData.length) {
-                            writeCachedMedia(window.mediaData);
+                        const scriptData = readGlobalMedia();
+                        if (scriptData.length) {
+                            window.mediaData = scriptData;
+                            writeCachedMedia(scriptData);
                             this.state.mediaLoadError = '';
                         }
                     }
@@ -754,7 +770,7 @@
                     if (!loaded) window.mediaData = [];
                 } catch (e) {
                     console.warn('Nepodařilo se načíst data.js', e);
-                    const fallback = Array.isArray(window.mediaData) && window.mediaData.length ? window.mediaData : readCachedMedia();
+                    const fallback = readGlobalMedia().length ? readGlobalMedia() : readCachedMedia();
                     window.mediaData = Array.isArray(fallback) ? fallback : [];
                     this.state.mediaLoadError = window.mediaData.length
                         ? 'Načtení data.js selhalo, používám fallback data.'
