@@ -69,6 +69,8 @@
         .search-input:focus { border-color: var(--accent); background: #000; box-shadow: 0 0 30px var(--accent-glow); }
         .search-wrapper.focused { z-index: 3200; }
         .search-wrapper.focused .search-input { border-color: var(--accent); background: #000; box-shadow: 0 0 35px var(--accent-glow); }
+        .luck-btn { border: 1px solid var(--glass-border); background: var(--glass); color: white; border-radius: 14px; padding: 12px 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.25s var(--smooth); white-space: nowrap; }
+        .luck-btn:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 22px var(--accent-glow); transform: translateY(-1px); }
 
         #search-results { position: absolute; top: calc(100% + 10px); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 20px; max-height: 400px; overflow-y: auto; display: none; z-index: 4200; box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: none; }
         .search-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
@@ -101,7 +103,7 @@
         .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; padding-bottom: 25px; }
 
         /* Modals */
-        #modal-engine, #playlist-picker { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.9); backdrop-filter: blur(30px); display: none; align-items: center; justify-content: center; padding: 30px; }
+        #modal-engine, #playlist-picker, #confirm-overlay, #review-editor-overlay { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.9); backdrop-filter: blur(30px); display: none; align-items: center; justify-content: center; padding: 30px; }
         .modal-surface { width: 100%; max-width: 1300px; height: 85vh; background: var(--bg-panel); border-radius: 40px; border: 1px solid var(--glass-border); display: flex; overflow: hidden; position: relative; }
         
         .modal-close-btn { position: absolute; top: 25px; right: 25px; z-index: 10001; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; transition: 0.3s; }
@@ -112,6 +114,13 @@
 
         #playlist-picker { z-index: 20000; background: rgba(0,0,0,0.85); }
         .picker-surface { background: var(--bg-card); width: 100%; max-width: 420px; border-radius: 35px; border: 1px solid var(--glass-border); padding: 35px; box-shadow: 0 25px 80px rgba(0,0,0,0.8); position: relative; }
+        .mini-modal-surface { background: var(--bg-card); width: 100%; max-width: 560px; border-radius: 28px; border: 1px solid var(--glass-border); padding: 26px; box-shadow: 0 25px 80px rgba(0,0,0,0.8); position: relative; }
+        .mini-modal-title { font-size: 1.25rem; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 8px; }
+        .mini-modal-sub { color: var(--text-dim); margin-bottom: 18px; line-height: 1.5; }
+        .mini-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+        .danger-btn { background: rgba(255, 71, 87, 0.22); border-color: rgba(255, 71, 87, 0.65); color: #ff8a95; }
+        .danger-btn:hover { background: #ff4757 !important; color: white !important; }
+        .review-edit-box { width: 100%; min-height: 170px; border-radius: 14px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.38); color: white; padding: 14px; resize: vertical; font-family: 'Outfit', sans-serif; font-size: 0.98rem; }
         .picker-list { margin: 25px 0; max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .picker-item { padding: 16px 20px; background: var(--glass); border-radius: 18px; cursor: pointer; transition: 0.3s; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
         .picker-item:hover { background: var(--glass-heavy); border-color: var(--accent); }
@@ -137,7 +146,7 @@
         .profile-bio { margin-top: 12px; color: #cbd5e1; line-height: 1.5; }
         .profile-row { display: grid; grid-template-columns: 1fr; gap: 20px; grid-column: 1 / -1; }
         .profile-list { display: grid; gap: 10px; max-height: 280px; overflow-y: auto; }
-        .reviews-view { display:none; }
+        .reviews-view, .community-view { display:none; }
         .review-card { background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)); border:1px solid var(--glass-border); border-radius:18px; padding:14px; margin-bottom:12px; word-break: break-word; }
         .profile-mini { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 14px; padding: 10px 12px; }
         .profile-mini-main { display: flex; align-items: center; gap: 10px; overflow: hidden; }
@@ -194,6 +203,7 @@
             .search-input { padding: 14px 20px 14px 45px; font-size: 16px; }
             .search-wrapper i { left: 15px; }
             #stats-counter { display: none; }
+            .luck-btn span { display: none; }
             .header-profile-btn span { display: none; }
 
             .viewport-content { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 100%; }
@@ -281,6 +291,7 @@
         <div class="nav-link" data-view="Serials" onclick="Core.navigate('Serials', this)"><i class="fa-solid fa-tv"></i> Seriály</div>
         <div class="nav-link" data-view="Anime" onclick="Core.navigate('Anime', this)"><i class="fa-solid fa-ghost"></i> Anime</div>
         <div class="nav-link" data-view="favorites" onclick="Core.navigate('favorites', this)"><i class="fa-solid fa-heart" style="color:var(--c-fav)"></i> Oblíbené</div>
+        <div class="nav-link" data-view="community" onclick="Core.navigate('community', this)"><i class="fa-solid fa-users"></i> Komunita</div>
         <div class="nav-link" data-view="reviews" onclick="Core.navigate('reviews', this)"><i class="fa-solid fa-pen-to-square"></i> Recenze</div>
         
         <div class="nav-label">Moje Seznamy <i class="fa-solid fa-plus" style="cursor:pointer" onclick="Core.openPlaylistCreateModal()"></i></div>
@@ -310,6 +321,10 @@
                    oninput="Core.handleSearch(this.value)" onfocus="Core.startSearchFocus(); Core.handleSearch(this.value)" onblur="setTimeout(() => Core.endSearchFocus(), 180)">
             <div id="search-results"></div>
         </div>
+        <button class="luck-btn" onclick="Core.tryMyLuck()" title="Náhodné doporučení podle aktuální kategorie">
+            <i class="fa-solid fa-dice"></i>
+            <span>Try my luck</span>
+        </button>
         <div id="stats-counter" style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.8rem; white-space: nowrap;">0 TITULŮ</div>
     </header>
 
@@ -351,19 +366,15 @@
                         <div class="nav-label" style="margin:0 0 12px 0">Posledních 5 zhlédnutých</div>
                         <div id="profile-recent-watched" class="profile-list"></div>
                     </div>
-                    <div class="profile-card">
-                        <div class="nav-label" style="margin:0 0 12px 0">Poslední recenze</div>
-                        <div id="profile-recent-reviews" class="profile-list"></div>
-                    </div>
                 </div>
+            </div>
+        </section>
 
-                <div class="profile-card">
-                    <div class="nav-label" style="margin:0 0 12px 0">Komunitní profily</div>
-                    <input id="community-profile-search" class="search-input" type="text" placeholder="Hledat podle nickname..." style="padding-left:18px; margin-bottom:12px" oninput="Core.handleCommunityProfileSearch(this.value)">
-                    <div id="community-profile-dropdown" class="profile-list" style="margin-bottom:12px; max-height: 170px"></div>
-                    <div id="community-profiles-list" class="profile-list"></div>
-                    <button id="back-to-own-profile" class="page-btn" style="margin-top:12px; display:none" onclick="Core.openOwnProfile()">Zpět na můj profil</button>
-                </div>
+        <section id="community-view" class="community-view">
+            <div class="profile-card">
+                <div class="nav-label" style="margin:0 0 12px 0">Komunitní profily</div>
+                <input id="community-view-search" class="search-input" type="text" placeholder="Hledat podle nickname nebo bio..." style="padding-left:18px; margin-bottom:12px" oninput="Core.handleCommunityProfileSearch(this.value)">
+                <div id="community-profiles-list" class="profile-list"></div>
             </div>
         </section>
 
@@ -435,7 +446,29 @@
     </div>
 </div>
 
-<script src="data.js"></script>
+<div id="confirm-overlay" onclick="if(event.target===this) Core.closeConfirmModal()">
+    <div class="mini-modal-surface">
+        <div class="mini-modal-title" id="confirm-title">Potvrzení akce</div>
+        <div class="mini-modal-sub" id="confirm-text">Opravdu chceš pokračovat?</div>
+        <div class="mini-modal-actions">
+            <button class="page-btn" onclick="Core.closeConfirmModal()">Zrušit</button>
+            <button class="page-btn danger-btn" onclick="Core.executeConfirmAction()">Ano, pokračovat</button>
+        </div>
+    </div>
+</div>
+
+<div id="review-editor-overlay" onclick="if(event.target===this) Core.closeReviewEditor()">
+    <div class="mini-modal-surface">
+        <div class="mini-modal-title">Upravit recenzi</div>
+        <div class="mini-modal-sub">Uprav text recenze. Změny se uloží do databáze.</div>
+        <textarea id="review-editor-input" class="review-edit-box" placeholder="Napiš upravenou recenzi..."></textarea>
+        <div class="mini-modal-actions">
+            <button class="page-btn" onclick="Core.closeReviewEditor()">Zrušit</button>
+            <button class="page-btn" onclick="Core.saveEditedReview()">Uložit změny</button>
+        </div>
+    </div>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -515,22 +548,102 @@
             recoCache: { watchedIds: new Set(), catPref: { Movie:0, Serials:0, Anime:0 } },
             allReviews: [],
             communityProfileQuery: '',
+            communityProfileLoading: false,
+            communityProfiles: [],
             profileReviewsUnsub: null,
             mediaById: new Map(),
             mediaRecords: [],
+            mediaBootstrapStarted: false,
+            mediaLoadPromise: null,
+            confirmAction: null,
+            reviewEditTarget: null,
+            filteredCacheSig: '',
+            filteredCacheItems: [],
+            normCache: new Map(),
             suppressOwnProfileLoad: false
         },
 
         async init() {
+            this.state.mediaBootstrapStarted = true;
+            await this.loadMediaData();
             this.prepareMediaCache();
             this.syncPlaylists();
-            this.subscribeProfiles();
-            this.subscribeAllReviews();
             this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
-            await this.loadUserRecentReviews(this.state.activeProfileUid);
-            this.renderProfile();
+
+            // Fast first paint: render grid immediately and load slower DB sections in background.
             this.renderGrid();
+            this.renderProfile();
+
+            this.deferTask(() => this.subscribeProfiles());
+            // Reviews should start immediately so Community Reviews view is never empty for too long.
+            this.subscribeAllReviews();
+            this.deferTask(() => {
+                this.loadAllReviewsFallback().then(() => {
+                    if (this.state.view === 'reviews') this.renderReviewsView();
+                }).catch(() => {});
+            });
+            this.deferTask(() => this.fetchCommunityProfiles(''));
+            this.deferTask(() => {
+                this.loadUserRecentReviews(this.state.activeProfileUid).then(() => {
+                    if (this.state.view === 'profile') this.renderProfile();
+                }).catch(() => {});
+            });
+
+            // If mediaData arrives a bit later, refresh automatically (keeps UI responsive under slow script load).
+            this.ensureMediaCacheReady();
             window.addEventListener('resize', () => this.updateSearchOverlayTop());
+        },
+
+        async loadMediaData() {
+            if (Array.isArray(window.mediaData) && window.mediaData.length) return;
+            if (this.state.mediaLoadPromise) {
+                await this.state.mediaLoadPromise;
+                return;
+            }
+            this.state.mediaLoadPromise = (async () => {
+                const extractArray = (payload) => {
+                    if (Array.isArray(payload)) return payload;
+                    if (!payload || typeof payload !== 'object') return [];
+                    const keyCandidates = ['mediaData', 'items', 'data', 'results', 'catalog', 'list'];
+                    for (const k of keyCandidates) {
+                        if (Array.isArray(payload[k])) return payload[k];
+                    }
+                    const values = Object.values(payload).filter(Array.isArray);
+                    if (!values.length) return [];
+                    values.sort((a,b) => b.length - a.length);
+                    return values[0];
+                };
+                try {
+                    const paths = ['./data.json', 'data.json'];
+                    let loaded = false;
+                    for (const path of paths) {
+                        try {
+                            const res = await fetch(path, { cache: 'force-cache' });
+                            if (!res.ok) continue;
+                            const data = await res.json();
+                            const parsed = extractArray(data);
+                            if (parsed.length) {
+                                window.mediaData = parsed;
+                                loaded = true;
+                                break;
+                            }
+                        } catch (_) {}
+                    }
+                    if (!loaded) window.mediaData = [];
+                } catch (e) {
+                    console.warn('Nepodařilo se načíst data.json', e);
+                    window.mediaData = Array.isArray(window.mediaData) ? window.mediaData : [];
+                }
+            })();
+            await this.state.mediaLoadPromise;
+        },
+
+        deferTask(fn) {
+            if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(() => fn(), { timeout: 450 });
+                return;
+            }
+            setTimeout(fn, 0);
         },
 
         toggleSidebar(f) {
@@ -542,7 +655,7 @@
 
         async save() {
             if (FB.auth.currentUser) {
-                const payload = { ...this.state.db, profile: this.state.profile };
+                const payload = { ...this.state.db, profile: this.state.profile, profileSearch: this.normalizeText(this.state.profile.nickname || '') };
                 try { await FB.setDoc(FB.doc(FB.db, "users", FB.auth.currentUser.uid), payload); } 
                 catch(e) { console.error("Save failed:", e); }
             }
@@ -551,7 +664,7 @@
         handleAuth() {
             const email = document.getElementById('auth-email').value, pass = document.getElementById('auth-pass').value;
             const isReg = document.getElementById('auth-title').innerText === 'Registrace';
-            if(isReg) FB.createUserWithEmailAndPassword(FB.auth, email, pass).then(r => FB.setDoc(FB.doc(FB.db, "users", r.user.uid), { ...this.state.db, profile: this.state.profile })).catch(e => alert(e.message));
+            if(isReg) FB.createUserWithEmailAndPassword(FB.auth, email, pass).then(r => FB.setDoc(FB.doc(FB.db, "users", r.user.uid), { ...this.state.db, profile: this.state.profile, profileSearch: this.normalizeText(this.state.profile.nickname || email.split('@')[0] || '') })).catch(e => alert(e.message));
             else FB.signInWithEmailAndPassword(FB.auth, email, pass).catch(e => alert(e.message));
         },
 
@@ -571,9 +684,13 @@
             if (view !== 'profile') {
                 this.state.activeProfileUid = this.state.user?.uid || null;
             }
-            let label = view === 'all' ? 'Všechno' : (view === 'favorites' ? 'Oblíbené' : (view === 'profile' ? 'Profil uživatele' : (view === 'reviews' ? 'Recenze komunity' : (this.state.db.playlists[view] ? `Seznam: ${view}` : view))));
+            let label = view === 'all' ? 'Všechno' : (view === 'favorites' ? 'Oblíbené' : (view === 'profile' ? 'Profil uživatele' : (view === 'reviews' ? 'Recenze komunity' : (view === 'community' ? 'Komunitní profily' : (this.state.db.playlists[view] ? `Seznam: ${view}` : view)))));
             document.getElementById('view-title').innerText = label;
             if (view === 'profile' && !this.state.suppressOwnProfileLoad) this.openProfile(this.state.user?.uid);
+            if (view === 'community') this.fetchCommunityProfiles(this.state.communityProfileQuery || '');
+            if (view === 'reviews' && !this.state.allReviews.length) {
+                this.loadAllReviewsFallback().then(() => this.renderReviewsView()).catch(() => {});
+            }
             this.renderGrid();
             this.endSearchFocus();
             if (window.innerWidth <= 900) this.toggleSidebar(false);
@@ -585,16 +702,55 @@
 
         prepareMediaCache() {
             if (this.state.mediaRecords.length > 0) return;
-            this.state.mediaRecords = (mediaData || []).map(item => ({
-                ...item,
-                _id: item.id?.toString(),
-                _qTitle: this.normalizeText(item.title || '')
-            }));
-            this.state.mediaById = new Map(this.state.mediaRecords.map(item => [item._id, item]));
+            const source = (typeof mediaData !== 'undefined' && Array.isArray(mediaData))
+                ? mediaData
+                : (Array.isArray(window.mediaData) ? window.mediaData : []);
+            if (!source.length) return;
+            const out = new Array(source.length);
+            const byId = new Map();
+            for (let i = 0; i < source.length; i += 1) {
+                const item = source[i] || {};
+                const normalized = {
+                    ...item,
+                    _id: item.id?.toString(),
+                    _qTitle: this.normalizeText(item.title || '')
+                };
+                out[i] = normalized;
+                if (normalized._id) byId.set(normalized._id, normalized);
+            }
+            this.state.mediaRecords = out;
+            this.state.mediaById = byId;
+        },
+
+        ensureMediaCacheReady() {
+            if (this.state.mediaRecords.length) return;
+            const startedAt = Date.now();
+            const timer = setInterval(() => {
+                if (this.state.mediaRecords.length) {
+                    clearInterval(timer);
+                    return;
+                }
+                if (!Array.isArray(window.mediaData) || !window.mediaData.length) {
+                    this.loadMediaData().catch(() => {});
+                }
+                this.prepareMediaCache();
+                if (this.state.mediaRecords.length) {
+                    clearInterval(timer);
+                    this.renderGrid();
+                    return;
+                }
+                if (Date.now() - startedAt > 15000) clearInterval(timer);
+            }, 250);
         },
 
         normalizeText(v) {
-            return (v || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+            const raw = (v || '').toString();
+            const hit = this.state.normCache.get(raw);
+            if (hit !== undefined) return hit;
+            const normalized = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+            if (this.state.normCache.size > 2000) this.state.normCache.clear();
+            this.state.normCache.set(raw, normalized);
+            return normalized;
         },
 
         isMediaWatched(mediaId) {
@@ -643,37 +799,74 @@
                         nickname: data.profile?.nickname || 'Uživatel',
                         avatar: data.profile?.avatar || '',
                         bio: data.profile?.bio || '',
+                        profileSearch: data.profileSearch || this.normalizeText(data.profile?.nickname || ''),
                         watchedLog: data.watchedLog || [],
                         episodes: data.episodes || []
                     };
                 });
                 if (this.state.view === 'profile') this.renderProfile();
+                if (!this.state.communityProfileQuery) {
+                    const ownUid = this.state.user?.uid;
+                    this.state.communityProfiles = this.state.publicProfiles.filter(p => p.uid !== ownUid).slice(0, 60);
+                }
+                if (this.state.view === 'community') this.renderCommunityView();
             });
         },
 
         handleCommunityProfileSearch(v) {
             this.state.communityProfileQuery = this.normalizeText(v || '');
-            this.renderCommunityProfileDropdown();
-            if (this.state.view === 'profile') this.renderProfile();
+            this.fetchCommunityProfiles(v || '');
         },
 
-        renderCommunityProfileDropdown() {
-            const root = document.getElementById('community-profile-dropdown');
-            if (!root) return;
+        async fetchCommunityProfiles(rawQuery = '') {
+            this.state.communityProfileQuery = this.normalizeText(rawQuery || '');
             const ownUid = this.state.user?.uid;
-            const q = this.state.communityProfileQuery || '';
-            const matches = this.state.publicProfiles
+            const q = this.state.communityProfileQuery;
+            this.state.communityProfileLoading = true;
+            let matches = [];
+            try {
+                const snap = await FB.getDocs(FB.query(FB.collection(FB.db, 'users'), FB.limit(300)));
+                matches = snap.docs.map(d => {
+                    const data = d.data() || {};
+                    return {
+                        uid: d.id,
+                        nickname: data.profile?.nickname || 'Uživatel',
+                        avatar: data.profile?.avatar || '',
+                        bio: data.profile?.bio || '',
+                        watchedLog: data.watchedLog || [],
+                        episodes: data.episodes || [],
+                        profileSearch: data.profileSearch || this.normalizeText(data.profile?.nickname || '')
+                    };
+                });
+                this.state.publicProfiles = matches;
+            } catch (e) {
+                console.error('Community profiles fetch failed', e);
+                matches = this.state.publicProfiles;
+            }
+
+            this.state.communityProfiles = matches
                 .filter(p => p.uid !== ownUid)
                 .filter(p => {
                     if (!q) return true;
-                    const n = this.normalizeText(p.nickname || '');
+                    const n = p.profileSearch || this.normalizeText(p.nickname || '');
                     const b = this.normalizeText(p.bio || '');
                     return n.includes(q) || b.includes(q);
                 })
-                .slice(0, q ? 8 : 5);
-            root.innerHTML = matches.map(p => {
+                .slice(0, 60);
+            this.state.communityProfileLoading = false;
+            if (this.state.view === 'community') this.renderCommunityView();
+        },
+
+        renderCommunityView() {
+            const root = document.getElementById('community-profiles-list');
+            if (!root) return;
+            if (this.state.communityProfileLoading) {
+                root.innerHTML = `<div style="color:var(--text-dim)">Načítám profily...</div>`;
+                return;
+            }
+            root.innerHTML = this.state.communityProfiles.map(p => {
                 const pav = p.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nickname || 'U') + '&background=0f172a&color=38bdf8&bold=true';
-                return `<div class="profile-mini"><div class="profile-mini-main"><img class="profile-mini-avatar" src="${pav}" alt="avatar"><div><div class="profile-mini-name">${p.nickname || 'Uživatel'}</div><div class="profile-mini-sub">${(p.bio || 'Bez bio').slice(0, 42)}</div></div></div><button class="page-btn" style="padding:6px 10px" onclick="Core.openExternalProfile('${p.uid}')">Otevřít</button></div>`;
+                return `<div class="profile-mini"><div class="profile-mini-main"><img class="profile-mini-avatar" src="${pav}" alt="avatar"><div><div class="profile-mini-name">${p.nickname || 'Uživatel'}</div><div class="profile-mini-sub">${(p.bio || 'Bez bio').slice(0, 65)}</div></div></div><button class="page-btn" style="padding:6px 10px" onclick="Core.openExternalProfile('${p.uid}')">Otevřít profil</button></div>`;
             }).join('') || `<div style="color:var(--text-dim)">Nenalezen žádný komunitní profil.</div>`;
         },
 
@@ -681,7 +874,7 @@
             FB.onSnapshot(FB.query(FB.collection(FB.db, 'comments'), FB.orderBy('createdAt', 'desc'), FB.limit(250)), async (snap) => {
                 const live = snap.docs.map(d => {
                     const c = d.data() || {};
-                    return { ...c, id: d.id, createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : Date.now() };
+                    return { ...c, id: d.id, createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : 0 };
                 });
                 const seen = new Set(live.map(r => `${r.uid || 'anon'}|${r.mediaId || ''}|${r.text || ''}`));
                 try {
@@ -706,9 +899,43 @@
                 } catch (_) {}
                 this.state.allReviews = live.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 300);
                 if (this.state.view === 'reviews') this.renderReviewsView();
-            }, () => {
-                // fallback: keep existing cache
+            }, async () => {
+                await this.loadAllReviewsFallback();
+                if (this.state.view === 'reviews') this.renderReviewsView();
             });
+        },
+
+        async loadAllReviewsFallback() {
+            const live = [];
+            try {
+                const snap = await FB.getDocs(FB.query(FB.collection(FB.db, 'comments'), FB.limit(250)));
+                snap.forEach(d => {
+                    const c = d.data() || {};
+                    live.push({ ...c, id: d.id, createdAt: c.createdAt?.toMillis ? c.createdAt.toMillis() : 0 });
+                });
+            } catch (_) {}
+            try {
+                const fallbackSnap = await FB.getDocs(FB.query(FB.collection(FB.db, 'global_ratings'), FB.limit(250)));
+                const seen = new Set(live.map(r => `${r.uid || 'anon'}|${r.mediaId || ''}|${r.text || ''}`));
+                fallbackSnap.forEach(d => {
+                    const data = d.data() || {};
+                    const arr = Array.isArray(data.commentsFallback) ? data.commentsFallback : [];
+                    arr.forEach((c, i) => {
+                        const key = `${c.uid || 'anon'}|${c.mediaId || d.id}|${c.text || ''}`;
+                        if (seen.has(key)) return;
+                        seen.add(key);
+                        live.push({
+                            ...c,
+                            id: `fb-${d.id}-${i}`,
+                            mediaId: c.mediaId || d.id?.toString() || '',
+                            mediaTitle: c.mediaTitle || this.getMediaById(d.id)?.title || 'Titul',
+                            mediaCat: c.mediaCat || this.getMediaById(d.id)?.cat || '',
+                            createdAt: c.createdAt || 0
+                        });
+                    });
+                });
+            } catch (_) {}
+            this.state.allReviews = live.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 300);
         },
 
         async openProfile(uid) {
@@ -843,14 +1070,18 @@
             document.getElementById('profile-bio-input').value = isOwn ? (this.state.profile.bio || '') : '';
             document.getElementById('profile-avatar-preview').src = avatar;
             document.getElementById('profile-bio-view').innerText = bio;
-            document.getElementById('pc-user-email').innerText = nick;
-            document.getElementById('pc-user-initials').innerText = nick.charAt(0).toUpperCase();
+            const ownNick = this.state.profile?.nickname || this.state.user?.email?.split('@')[0] || 'Uživatel';
+            const ownAvatar = this.state.profile?.avatar || '';
+            document.getElementById('pc-user-email').innerText = ownNick;
+            if (ownAvatar) {
+                document.getElementById('pc-user-initials').innerHTML = `<img src="${ownAvatar}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+            } else {
+                document.getElementById('pc-user-initials').innerText = ownNick.charAt(0).toUpperCase();
+            }
 
             document.getElementById('profile-nickname-input').disabled = !isOwn;
             document.getElementById('profile-avatar-input').disabled = !isOwn;
             document.getElementById('profile-bio-input').disabled = !isOwn;
-            const backBtn = document.getElementById('back-to-own-profile');
-            if (backBtn) backBtn.style.display = isOwn ? 'none' : 'inline-flex';
 
             const ids = new Set(episodes.map(uid => uid.startsWith('m-') ? uid.replace('m-', '') : uid.split('_')[0]));
             let movieCount = 0, serialCount = 0, animeCount = 0;
@@ -886,50 +1117,6 @@
                 </div>
             `).join('') || `<div style="color:var(--text-dim)">Zatím nic nezhlédnuto.</div>`;
 
-            const lastThree = this.state.profileRecentReviews.slice(0, 3);
-            const older = this.state.profileRecentReviews.slice(3);
-            document.getElementById('profile-recent-reviews').innerHTML = `
-                <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:6px">Poslední 3 recenze</div>
-                ${lastThree.map(r => `
-                <div class=\"recent-item\">
-                    <div class=\"recent-title\">${r.mediaTitle}</div>
-                    <div>${(r.text || '').slice(0, 140)}</div>
-                    <div class=\"recent-meta\">${r.mediaCat || ''}</div>
-                </div>`).join('') || `<div style=\"color:var(--text-dim)\">Žádné recenze.</div>`}
-                <div style="font-size:0.75rem;color:var(--text-dim);margin:10px 0 6px">Starší recenze</div>
-                ${older.map(r => `
-                <div class=\"recent-item\">
-                    <div class=\"recent-title\">${r.mediaTitle}</div>
-                    <div>${(r.text || '').slice(0, 100)}</div>
-                    <div class=\"recent-meta\">${r.mediaCat || ''}</div>
-                </div>`).join('') || `<div style=\"color:var(--text-dim)\">Bez dalších recenzí.</div>`}
-            `;
-
-            const q = this.state.communityProfileQuery || '';
-            document.getElementById('community-profiles-list').innerHTML = this.state.publicProfiles
-                .filter(p => p.uid !== viewedUid)
-                .filter(p => {
-                    if (!q) return true;
-                    const n = this.normalizeText(p.nickname || '');
-                    const b = this.normalizeText(p.bio || '');
-                    return n.includes(q) || b.includes(q);
-                })
-                .slice(0, 20)
-                .map(p => {
-                    const pav = p.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.nickname || 'U') + '&background=0f172a&color=38bdf8&bold=true';
-                    return `
-                    <div class="profile-mini">
-                        <div class="profile-mini-main">
-                            <img class="profile-mini-avatar" src="${pav}" alt="avatar">
-                            <div>
-                                <div class="profile-mini-name">${p.nickname || 'Uživatel'}</div>
-                                <div class="profile-mini-sub">${(p.bio || 'Bez bio').slice(0, 48)}</div>
-                            </div>
-                        </div>
-                        <button class="page-btn" style="padding:8px 12px" onclick="Core.openExternalProfile('${p.uid}')">Navštívit</button>
-                    </div>`;
-                }).join('') || `<div style="color:var(--text-dim)">Žádné profily.</div>`;
-            this.renderCommunityProfileDropdown();
         },
 
         async saveProfile() {
@@ -1155,35 +1342,11 @@
             return Math.round((watched / total) * 100);
         },
 
-        renderGrid() {
-            const profileView = document.getElementById('profile-view');
-            const reviewsView = document.getElementById('reviews-view');
-            const mainGrid = document.getElementById('main-grid');
-            const pagination = document.getElementById('main-pagination');
-            if (this.state.view === 'profile') {
-                profileView.style.display = 'block';
-                reviewsView.style.display = 'none';
-                mainGrid.style.display = 'none';
-                pagination.style.display = 'none';
-                this.renderProfile();
-                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `PROFIL`;
-                return;
-            }
-            if (this.state.view === 'reviews') {
-                profileView.style.display = 'none';
-                reviewsView.style.display = 'block';
-                mainGrid.style.display = 'none';
-                pagination.style.display = 'none';
-                this.renderReviewsView();
-                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `RECENZE`;
-                return;
-            }
-            profileView.style.display = 'none';
-            reviewsView.style.display = 'none';
-            mainGrid.style.display = 'grid';
-            pagination.style.display = 'flex';
-            const grid = document.getElementById('main-grid');
+        getFilteredMediaItems() {
             const q = this.normalizeText(this.state.query);
+            const playlistSize = this.state.db.playlists[this.state.view]?.length || 0;
+            const sig = `${this.state.view}|${q}|${this.state.mediaRecords.length}|${this.state.db.fav.length}|${this.state.db.episodes.length}|${playlistSize}`;
+            if (this.state.view !== 'all' && sig === this.state.filteredCacheSig) return this.state.filteredCacheItems;
             let items = this.state.mediaRecords.filter(i => {
                 const m = i._qTitle.includes(q);
                 if (this.state.view === 'all') return m;
@@ -1200,6 +1363,70 @@
                 };
                 items = items.sort((a, b) => this.buildRecommendationScore(b) - this.buildRecommendationScore(a));
             }
+            if (this.state.view !== 'all') {
+                this.state.filteredCacheSig = sig;
+                this.state.filteredCacheItems = items;
+            }
+            return items;
+        },
+
+        tryMyLuck() {
+            if (this.state.view === 'profile' || this.state.view === 'reviews' || this.state.view === 'community') {
+                alert('Try my luck funguje v knihovně, oblíbených a seznamech.');
+                return;
+            }
+            const items = this.getFilteredMediaItems();
+            if (!items.length) {
+                alert('V aktuální kategorii nejsou žádné tituly pro náhodné doporučení.');
+                return;
+            }
+            const pick = items[Math.floor(Math.random() * items.length)];
+            this.openModal(pick.id.toString());
+        },
+
+        renderGrid() {
+            const profileView = document.getElementById('profile-view');
+            const reviewsView = document.getElementById('reviews-view');
+            const communityView = document.getElementById('community-view');
+            const mainGrid = document.getElementById('main-grid');
+            const pagination = document.getElementById('main-pagination');
+            if (this.state.view === 'profile') {
+                profileView.style.display = 'block';
+                reviewsView.style.display = 'none';
+                communityView.style.display = 'none';
+                mainGrid.style.display = 'none';
+                pagination.style.display = 'none';
+                this.renderProfile();
+                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `PROFIL`;
+                return;
+            }
+            if (this.state.view === 'community') {
+                profileView.style.display = 'none';
+                reviewsView.style.display = 'none';
+                communityView.style.display = 'block';
+                mainGrid.style.display = 'none';
+                pagination.style.display = 'none';
+                this.renderCommunityView();
+                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `KOMUNITA`;
+                return;
+            }
+            if (this.state.view === 'reviews') {
+                profileView.style.display = 'none';
+                reviewsView.style.display = 'block';
+                communityView.style.display = 'none';
+                mainGrid.style.display = 'none';
+                pagination.style.display = 'none';
+                this.renderReviewsView();
+                if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `RECENZE`;
+                return;
+            }
+            profileView.style.display = 'none';
+            reviewsView.style.display = 'none';
+            communityView.style.display = 'none';
+            mainGrid.style.display = 'grid';
+            pagination.style.display = 'flex';
+            const grid = document.getElementById('main-grid');
+            const items = this.getFilteredMediaItems();
             const totalPages = Math.ceil(items.length / this.state.perPage) || 1;
             const slice = items.slice((this.state.page - 1) * this.state.perPage, this.state.page * this.state.perPage);
             document.getElementById('page-info').innerText = `${this.state.page} / ${totalPages}`;
@@ -1239,6 +1466,7 @@
 
         renderReviewsView() {
             const root = document.getElementById('reviews-list-root');
+            if (!root) return;
             const sorted = [...this.state.allReviews].sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
             root.innerHTML = sorted.slice(0, 120).map(r => {
                 const dt = r.createdAt ? new Date(r.createdAt).toLocaleString('cs-CZ') : 'teď';
@@ -1246,7 +1474,10 @@
                 const author = profile?.nickname || r.author || 'Uživatel';
                 const w = this.getReviewWeight(r.text, author);
                 const open = r.uid ? `<button class="page-btn" style="padding:6px 10px" onclick="Core.openExternalProfile('${r.uid}')">Profil</button>` : '';
-                return `<div class="review-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><b>${r.mediaTitle || 'Titul'}</b><div class="recent-meta">${author} • ${dt}</div></div><div class="review-tools"><span class="page-btn" style="padding:6px 10px; cursor:default">Váha ${w}</span>${open}</div></div><div style="margin-top:8px">${(r.text || '').replace(/</g,'&lt;')}</div></div>`;
+                const own = r.uid && r.uid === this.state.user?.uid;
+                const editBtn = own ? `<button class="page-btn" style="padding:6px 10px" onclick="Core.openReviewEditor('${r.id || ''}', '${r.mediaId || ''}', decodeURIComponent('${encodeURIComponent(r.text || '')}'), ${String((r.id || '').startsWith('fb-'))}, ${(r.id || '').startsWith('fb-') ? Number((r.id || '').split('-').pop() || 0) : -1})">Upravit</button>` : '';
+                const delBtn = own ? `<button class="page-btn danger-btn" style="padding:6px 10px" onclick="Core.requestDeleteReview('${r.id || ''}', '${r.mediaId || ''}', ${String((r.id || '').startsWith('fb-'))}, ${(r.id || '').startsWith('fb-') ? Number((r.id || '').split('-').pop() || 0) : -1})">Smazat</button>` : '';
+                return `<div class="review-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><b>${r.mediaTitle || 'Titul'}</b><div class="recent-meta">${author} • ${dt}</div></div><div class="review-tools"><span class="page-btn" style="padding:6px 10px; cursor:default">Váha ${w}</span>${open}${editBtn}${delBtn}</div></div><div style="margin-top:8px">${(r.text || '').replace(/</g,'&lt;')}</div></div>`;
             }).join('') || `<div style="color:var(--text-dim)">Žádné recenze.</div>`;
         },
 
@@ -1291,8 +1522,9 @@
                     const profile = this.state.publicProfiles.find(p => p.uid === c.uid);
                     const authorName = profile?.nickname || c.author || 'Uživatel';
                     const uidBtn = c.uid ? `<button class=\"page-btn\" style=\"padding:6px 10px\" onclick=\"Core.openExternalProfile('${c.uid}')\">Profil</button>` : '';
-                    const delBtn = c.uid && c.uid === this.state.user?.uid ? `<button class=\"page-btn\" style=\"padding:6px 10px\" onclick=\"Core.deleteReview('${d.id}', '${id}')\">Smazat</button>` : '';
-                    const w = this.getReviewWeight(c.text, authorName); return `<div class=\"comment-item\"><div class=\"comment-head\"><span class=\"comment-author\">${authorName}</span><span>${dt}</span><span class=\"review-tools\"><span class=\"page-btn\" style=\"padding:6px 10px; cursor:default\">Váha ${w}</span>${uidBtn}${delBtn}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
+                    const editBtn = c.uid && c.uid === this.state.user?.uid ? `<button class=\"page-btn\" style=\"padding:6px 10px\" onclick=\"Core.openReviewEditor('${d.id}', '${id}', decodeURIComponent('${encodeURIComponent(c.text || '')}'))\">Upravit</button>` : '';
+                    const delBtn = c.uid && c.uid === this.state.user?.uid ? `<button class=\"page-btn danger-btn\" style=\"padding:6px 10px\" onclick=\"Core.requestDeleteReview('${d.id}', '${id}')\">Smazat</button>` : '';
+                    const w = this.getReviewWeight(c.text, authorName); return `<div class=\"comment-item\"><div class=\"comment-head\"><span class=\"comment-author\">${authorName}</span><span>${dt}</span><span class=\"review-tools\"><span class=\"page-btn\" style=\"padding:6px 10px; cursor:default\">Váha ${w}</span>${uidBtn}${editBtn}${delBtn}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
                 }).join('');
             }, () => {
                 this.loadCommentsFallback(id);
@@ -1309,29 +1541,103 @@
                     list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Zatím bez recenzí.</div>`;
                     return;
                 }
-                list.innerHTML = arr.map(c => {
+                list.innerHTML = arr.map((c, idx) => {
                     const dt = c.createdAt ? new Date(c.createdAt).toLocaleString('cs-CZ') : 'teď';
-                    const w = this.getReviewWeight(c.text, c.author); return `<div class="comment-item"><div class="comment-head"><span class="comment-author">${c.author || 'Uživatel'}</span><span>${dt}</span><span class="page-btn" style="padding:6px 10px; cursor:default">Váha ${w}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
+                    const editBtn = c.uid && c.uid === this.state.user?.uid ? `<button class="page-btn" style="padding:6px 10px" onclick="Core.openReviewEditor('', '${id}', decodeURIComponent('${encodeURIComponent(c.text || '')}'), true, ${idx})">Upravit</button>` : '';
+                    const delBtn = c.uid && c.uid === this.state.user?.uid ? `<button class="page-btn danger-btn" style="padding:6px 10px" onclick="Core.requestDeleteReview('', '${id}', true, ${idx})">Smazat</button>` : '';
+                    const w = this.getReviewWeight(c.text, c.author); return `<div class="comment-item"><div class="comment-head"><span class="comment-author">${c.author || 'Uživatel'}</span><span>${dt}</span><span class="review-tools"><span class="page-btn" style="padding:6px 10px; cursor:default">Váha ${w}</span>${editBtn}${delBtn}</span></div><div>${(c.text || '').replace(/</g,'&lt;')}</div></div>`;
                 }).join('');
             } catch (_) {
                 list.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:14px;">Recenze nejsou dostupné.</div>`;
             }
         },
 
-        async deleteReview(reviewId, mediaId) {
-            if(!confirm('Smazat recenzi?')) return;
-            try {
-                await FB.deleteDoc(FB.doc(FB.db, 'comments', reviewId));
-            } catch (_) {
+        requestDeleteReview(reviewId, mediaId, isFallback = false, fallbackIndex = -1) {
+            this.state.confirmAction = async () => {
+                await this.deleteReview(reviewId, mediaId, isFallback, fallbackIndex);
+            };
+            document.getElementById('confirm-title').innerText = 'Smazat recenzi';
+            document.getElementById('confirm-text').innerText = 'Opravdu chceš recenzi trvale smazat? Tuto akci nelze vrátit.';
+            document.getElementById('confirm-overlay').style.display = 'flex';
+        },
+
+        closeConfirmModal() {
+            this.state.confirmAction = null;
+            document.getElementById('confirm-overlay').style.display = 'none';
+        },
+
+        async executeConfirmAction() {
+            if (typeof this.state.confirmAction === 'function') {
+                await this.state.confirmAction();
+            }
+            this.closeConfirmModal();
+        },
+
+        openReviewEditor(reviewId, mediaId, text = '', isFallback = false, fallbackIndex = -1) {
+            this.state.reviewEditTarget = { reviewId, mediaId, isFallback, fallbackIndex };
+            document.getElementById('review-editor-input').value = text || '';
+            document.getElementById('review-editor-overlay').style.display = 'flex';
+        },
+
+        closeReviewEditor() {
+            this.state.reviewEditTarget = null;
+            document.getElementById('review-editor-overlay').style.display = 'none';
+        },
+
+        async saveEditedReview() {
+            const payload = this.state.reviewEditTarget;
+            if (!payload) return;
+            const text = document.getElementById('review-editor-input').value.trim();
+            if (!text) return alert('Recenze nemůže být prázdná.');
+            if (payload.isFallback) {
+                const statsRef = FB.doc(FB.db, 'global_ratings', payload.mediaId.toString());
+                const snap = await FB.getDoc(statsRef);
+                if (snap.exists()) {
+                    const data = snap.data() || {};
+                    const arr = Array.isArray(data.commentsFallback) ? data.commentsFallback : [];
+                    if (arr[payload.fallbackIndex]) {
+                        arr[payload.fallbackIndex].text = text;
+                        arr[payload.fallbackIndex].editedAt = Date.now();
+                        data.commentsFallback = arr;
+                        await FB.setDoc(statsRef, data);
+                    }
+                }
+            } else {
+                const ref = FB.doc(FB.db, 'comments', payload.reviewId);
+                const snap = await FB.getDoc(ref);
+                if (snap.exists()) {
+                    const data = snap.data() || {};
+                    await FB.setDoc(ref, { ...data, text, editedAt: FB.serverTimestamp() });
+                }
+            }
+            this.closeReviewEditor();
+            if (payload.mediaId) this.bindComments(payload.mediaId);
+            if (this.state.view === 'reviews') this.renderReviewsView();
+        },
+
+        async deleteReview(reviewId, mediaId, isFallback = false, fallbackIndex = -1) {
+            if (!mediaId) return;
+            if (!isFallback && reviewId) {
+                try {
+                    await FB.deleteDoc(FB.doc(FB.db, 'comments', reviewId));
+                } catch (_) {
+                    // continue with fallback cleanup below
+                }
+            }
+            if (isFallback || !reviewId) {
                 const statsRef = FB.doc(FB.db, 'global_ratings', mediaId.toString());
                 const snap = await FB.getDoc(statsRef);
                 if (snap.exists()) {
-                    const data = snap.data();
-                    data.commentsFallback = (data.commentsFallback || []).filter(c => !(c.uid === this.state.user?.uid && c.mediaId === mediaId.toString()));
+                    const data = snap.data() || {};
+                    const comments = Array.isArray(data.commentsFallback) ? data.commentsFallback : [];
+                    if (fallbackIndex > -1) comments.splice(fallbackIndex, 1);
+                    else data.commentsFallback = comments.filter(c => !(c.uid === this.state.user?.uid && c.mediaId === mediaId.toString()));
+                    data.commentsFallback = fallbackIndex > -1 ? comments : data.commentsFallback;
                     await FB.setDoc(statsRef, data);
                 }
             }
             this.bindComments(mediaId);
+            if (this.state.view === 'reviews') this.loadAllReviewsFallback().then(() => this.renderReviewsView());
         },
 
         async postComment() {
