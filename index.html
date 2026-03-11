@@ -557,6 +557,9 @@
             mediaBootstrapStarted: false,
             confirmAction: null,
             reviewEditTarget: null,
+            filteredCacheSig: '',
+            filteredCacheItems: [],
+            normCache: new Map(),
             suppressOwnProfileLoad: false
         },
 
@@ -564,23 +567,32 @@
             this.state.mediaBootstrapStarted = true;
             this.prepareMediaCache();
             this.syncPlaylists();
-            this.subscribeProfiles();
-            this.subscribeAllReviews();
-            this.fetchCommunityProfiles('');
             this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
 
             // Fast first paint: render grid immediately and load slower DB sections in background.
             this.renderGrid();
             this.renderProfile();
 
-            setTimeout(() => this.fetchCommunityProfiles(''), 0);
-            this.loadUserRecentReviews(this.state.activeProfileUid).then(() => {
-                if (this.state.view === 'profile') this.renderProfile();
-            }).catch(() => {});
+            this.deferTask(() => this.subscribeProfiles());
+            this.deferTask(() => this.subscribeAllReviews());
+            this.deferTask(() => this.fetchCommunityProfiles(''));
+            this.deferTask(() => {
+                this.loadUserRecentReviews(this.state.activeProfileUid).then(() => {
+                    if (this.state.view === 'profile') this.renderProfile();
+                }).catch(() => {});
+            });
 
             // If mediaData arrives a bit later, refresh automatically (keeps UI responsive under slow script load).
             this.ensureMediaCacheReady();
             window.addEventListener('resize', () => this.updateSearchOverlayTop());
+        },
+
+        deferTask(fn) {
+            if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(() => fn(), { timeout: 450 });
+                return;
+            }
+            setTimeout(fn, 0);
         },
 
         toggleSidebar(f) {
@@ -675,7 +687,13 @@
         },
 
         normalizeText(v) {
-            return (v || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+            const raw = (v || '').toString();
+            const hit = this.state.normCache.get(raw);
+            if (hit !== undefined) return hit;
+            const normalized = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+            if (this.state.normCache.size > 2000) this.state.normCache.clear();
+            this.state.normCache.set(raw, normalized);
+            return normalized;
         },
 
         isMediaWatched(mediaId) {
@@ -1269,6 +1287,9 @@
 
         getFilteredMediaItems() {
             const q = this.normalizeText(this.state.query);
+            const playlistSize = this.state.db.playlists[this.state.view]?.length || 0;
+            const sig = `${this.state.view}|${q}|${this.state.mediaRecords.length}|${this.state.db.fav.length}|${this.state.db.episodes.length}|${playlistSize}`;
+            if (this.state.view !== 'all' && sig === this.state.filteredCacheSig) return this.state.filteredCacheItems;
             let items = this.state.mediaRecords.filter(i => {
                 const m = i._qTitle.includes(q);
                 if (this.state.view === 'all') return m;
@@ -1284,6 +1305,10 @@
                     Anime: this.getWatchedCategoryCount('Anime')
                 };
                 items = items.sort((a, b) => this.buildRecommendationScore(b) - this.buildRecommendationScore(a));
+            }
+            if (this.state.view !== 'all') {
+                this.state.filteredCacheSig = sig;
+                this.state.filteredCacheItems = items;
             }
             return items;
         },
