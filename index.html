@@ -601,6 +601,45 @@
                 return;
             }
             this.state.mediaLoadPromise = (async () => {
+                const tryParseLooseJsonList = (rawText) => {
+                    if (!rawText || typeof rawText !== 'string') return [];
+                    const text = rawText.trim();
+                    if (!text) return [];
+
+                    // Case 1: objects separated by commas but not wrapped in array: {..},{..}
+                    try {
+                        const wrapped = `[${text.replace(/,\s*$/,'')}]`;
+                        const parsed = JSON.parse(wrapped);
+                        if (Array.isArray(parsed)) return parsed;
+                    } catch (_) {}
+
+                    // Case 2: NDJSON (one JSON object per line)
+                    try {
+                        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                        const objs = lines.map(l => JSON.parse(l));
+                        if (objs.length) return objs;
+                    } catch (_) {}
+
+                    // Case 3: best-effort object chunk extraction by balanced braces
+                    const out = [];
+                    let depth = 0, start = -1;
+                    for (let i = 0; i < text.length; i += 1) {
+                        const ch = text[i];
+                        if (ch === '{') {
+                            if (depth === 0) start = i;
+                            depth += 1;
+                        } else if (ch === '}') {
+                            depth -= 1;
+                            if (depth === 0 && start > -1) {
+                                const chunk = text.slice(start, i + 1);
+                                try { out.push(JSON.parse(chunk)); } catch (_) {}
+                                start = -1;
+                            }
+                        }
+                    }
+                    return out;
+                };
+
                 const extractArray = (payload) => {
                     if (Array.isArray(payload)) return payload;
                     if (!payload || typeof payload !== 'object') return [];
@@ -620,8 +659,14 @@
                         try {
                             const res = await fetch(path, { cache: 'force-cache' });
                             if (!res.ok) continue;
-                            const data = await res.json();
-                            const parsed = extractArray(data);
+                            const rawText = await res.text();
+                            let parsed = [];
+                            try {
+                                const data = JSON.parse(rawText);
+                                parsed = extractArray(data);
+                            } catch (_) {
+                                parsed = tryParseLooseJsonList(rawText);
+                            }
                             if (parsed.length) {
                                 window.mediaData = parsed;
                                 loaded = true;
