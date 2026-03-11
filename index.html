@@ -101,6 +101,11 @@
         .poster-wrapper { position: relative; width: 100%; aspect-ratio: 2/3; border-radius: 22px; overflow: hidden; border: 1px solid var(--glass-border); }
         .poster-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; padding-bottom: 25px; }
+        .platform-chips { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+        .platform-chip { padding: 4px 8px; border-radius: 999px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.08); font-size: 0.66rem; font-weight: 700; line-height: 1; }
+
+        .modal-platforms { margin: 0 0 24px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .modal-platform-chip { padding: 7px 11px; border-radius: 999px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: #dbeafe; font-size: 0.78rem; font-weight: 700; }
 
         /* Modals */
         #modal-engine, #playlist-picker, #confirm-overlay, #review-editor-overlay { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.9); backdrop-filter: blur(30px); display: none; align-items: center; justify-content: center; padding: 30px; }
@@ -404,6 +409,7 @@
             <div class="nav-label" style="margin-left:0">Tvoje hodnocení</div>
             <div class="star-container" id="m-stars"></div>
             <p id="m-desc" style="color: #94a3b8; line-height: 1.6; margin-bottom: 30px;"></p>
+            <div id="m-platforms" class="modal-platforms"></div>
             <div id="m-content-root"></div>
             <div class="comments-wrap">
                 <div class="nav-label" style="margin:0 0 12px 0">Recenze komunity</div>
@@ -597,14 +603,23 @@
         },
 
         async loadMediaData() {
-            if (Array.isArray(window.mediaData) && window.mediaData.length) return;
+            const readGlobalMedia = () => {
+                try {
+                    if (typeof mediaData !== 'undefined' && Array.isArray(mediaData)) return mediaData;
+                } catch (_) {}
+                return Array.isArray(window.mediaData) ? window.mediaData : [];
+            };
+
+            if (readGlobalMedia().length) {
+                window.mediaData = readGlobalMedia();
+                return;
+            }
             if (this.state.mediaLoadPromise) {
                 await this.state.mediaLoadPromise;
                 return;
             }
             this.state.mediaLoadPromise = (async () => {
-                const loadLegacyScriptData = async () => {
-                    const candidates = ['./data.js', 'data.js', '../data.js'];
+                const loadLegacyScriptData = async (candidates) => {
                     for (const src of candidates) {
                         try {
                             await new Promise((resolve, reject) => {
@@ -615,7 +630,11 @@
                                 s.onerror = reject;
                                 document.head.appendChild(s);
                             });
-                            if (Array.isArray(window.mediaData) && window.mediaData.length) return true;
+                            const found = readGlobalMedia();
+                            if (found.length) {
+                                window.mediaData = found;
+                                return true;
+                            }
                         } catch (_) {}
                     }
                     return false;
@@ -697,52 +716,46 @@
                     return out;
                 };
 
-                const extractArray = (payload) => {
-                    if (Array.isArray(payload)) return payload;
-                    if (!payload || typeof payload !== 'object') return [];
-                    const keyCandidates = ['mediaData', 'items', 'data', 'results', 'catalog', 'list'];
-                    for (const k of keyCandidates) {
-                        if (Array.isArray(payload[k])) return payload[k];
-                    }
-                    const values = Object.values(payload).filter(Array.isArray);
-                    if (!values.length) return [];
-                    values.sort((a,b) => b.length - a.length);
-                    return values[0];
-                };
                 try {
-                    const defaultPaths = ['./data.json', 'data.json', '../data.json', './assets/data.json', './data/data.json'];
+                    const defaultPaths = ['./data.js', 'data.js', '../data.js'];
                     const configuredPath = (window.MEDIA_DATA_PATH || '').toString().trim();
                     const paths = configuredPath ? [configuredPath, ...defaultPaths] : defaultPaths;
                     this.state.mediaLoadTriedPaths = paths.slice();
-                    let loaded = false;
-                    for (const path of paths) {
-                        try {
-                            const rawText = await fetchTextWithRetry(path);
-                            if (/^\s*<!doctype html|^\s*<html/i.test(rawText)) {
-                                throw new Error('Path returned HTML instead of JSON');
-                            }
-                            let parsed = [];
+                    let loaded = await loadLegacyScriptData(paths);
+                    if (!loaded) {
+                        for (const path of paths) {
                             try {
-                                const data = JSON.parse(rawText);
-                                parsed = extractArray(data);
-                            } catch (_) {
-                                parsed = tryParseLooseJsonList(rawText);
+                                const rawText = await fetchTextWithRetry(path);
+                                if (/^\s*<!doctype html|^\s*<html/i.test(rawText)) {
+                                    throw new Error('Path returned HTML instead of JS dataset');
+                                }
+                                const scriptMatch = rawText.match(/mediaData\s*=\s*(\[[\s\S]*?\])\s*;?/);
+                                if (!scriptMatch || !scriptMatch[1]) {
+                                    throw new Error('Nenalezena mediaData v data.js');
+                                }
+                                let parsed = [];
+                                try {
+                                    parsed = JSON.parse(scriptMatch[1]);
+                                } catch (_) {
+                                    parsed = tryParseLooseJsonList(scriptMatch[1]);
+                                }
+                                if (parsed.length) {
+                                    window.mediaData = parsed;
+                                    writeCachedMedia(parsed);
+                                    this.state.mediaLoadError = '';
+                                    loaded = true;
+                                    break;
+                                }
+                            } catch (e) {
+                                console.warn(`Načtení datasetu selhalo pro ${path}`, e);
                             }
-                            if (parsed.length) {
-                                window.mediaData = parsed;
-                                writeCachedMedia(parsed);
-                                this.state.mediaLoadError = '';
-                                loaded = true;
-                                break;
-                            }
-                        } catch (e) {
-                            console.warn(`Načtení datasetu selhalo pro ${path}`, e);
                         }
                     }
                     if (!loaded) {
-                        const fromScript = await loadLegacyScriptData();
-                        if (fromScript && Array.isArray(window.mediaData) && window.mediaData.length) {
-                            writeCachedMedia(window.mediaData);
+                        const scriptData = readGlobalMedia();
+                        if (scriptData.length) {
+                            window.mediaData = scriptData;
+                            writeCachedMedia(scriptData);
                             this.state.mediaLoadError = '';
                             loaded = true;
                         }
@@ -751,19 +764,19 @@
                         const cached = readCachedMedia();
                         if (cached.length) {
                             window.mediaData = cached;
-                            this.state.mediaLoadError = 'Používám offline cache datasetu (data.json se teď nepodařilo načíst).';
+                            this.state.mediaLoadError = 'Používám offline cache datasetu (data.js se teď nepodařilo načíst).';
                         } else {
                             window.mediaData = [];
-                            this.state.mediaLoadError = `Nepodařilo se najít platný dataset. Zkontroluj cestu k JSON (${paths.join(', ')}).`;
+                            this.state.mediaLoadError = `Nepodařilo se najít platný dataset. Zkontroluj cestu k JS datasetu (${paths.join(', ')}).`;
                         }
                     }
                 } catch (e) {
-                    console.warn('Nepodařilo se načíst data.json', e);
-                    const fallback = Array.isArray(window.mediaData) && window.mediaData.length ? window.mediaData : readCachedMedia();
+                    console.warn('Nepodařilo se načíst data.js', e);
+                    const fallback = readGlobalMedia().length ? readGlobalMedia() : readCachedMedia();
                     window.mediaData = Array.isArray(fallback) ? fallback : [];
                     this.state.mediaLoadError = window.mediaData.length
-                        ? 'Načtení data.json selhalo, používám fallback data.'
-                        : 'Načtení data.json selhalo.';
+                        ? 'Načtení data.js selhalo, používám fallback data.'
+                        : 'Načtení data.js selhalo.';
                 }
             })();
             await this.state.mediaLoadPromise;
@@ -829,6 +842,24 @@
 
         getMediaById(id) {
             return this.state.mediaById.get(id?.toString()) || null;
+        },
+
+        normalizePlatforms(value) {
+            if (!Array.isArray(value)) return [];
+            return value
+                .map(p => (p || '').toString().trim())
+                .filter(Boolean);
+        },
+
+        renderPlatformsHtml(platforms, variant = 'card') {
+            const clean = this.normalizePlatforms(platforms);
+            if (!clean.length) return '';
+            if (variant === 'modal') {
+                return clean.map(platform => `<span class="modal-platform-chip">${platform}</span>`).join('');
+            }
+            const preview = clean.slice(0, 3);
+            const overflow = clean.length > 3 ? `<span class="platform-chip">+${clean.length - 3}</span>` : '';
+            return `<div class="platform-chips">${preview.map(platform => `<span class="platform-chip">${platform}</span>`).join('')}${overflow}</div>`;
         },
 
         prepareMediaCache() {
@@ -1590,6 +1621,7 @@
                         <div class="card-overlay">
                             <div style="font-size:0.65rem; font-weight:800; color:var(--accent)">${item.cat}</div>
                             <div style="font-weight:700; font-size:0.95rem">${item.title}</div>
+                            ${this.renderPlatformsHtml(item.platforms)}
                             <div class="user-rating-mini">
                                 ${Array.from({length: 5}, (_, i) => `<i class="fa-solid fa-star" style="opacity:${userRating > 0 && (i*2) < userRating ? 1 : 0.1}"></i>`).join('')}
                             </div>
@@ -1627,6 +1659,9 @@
             document.getElementById('m-title').innerText = item.title;
             document.getElementById('m-desc').innerText = item.overview || 'Bez popisu.';
             document.getElementById('m-cat').innerText = `${item.cat} • ${item.year || '?'}`;
+            const modalPlatforms = document.getElementById('m-platforms');
+            modalPlatforms.innerHTML = this.renderPlatformsHtml(item.platforms, 'modal');
+            modalPlatforms.style.display = modalPlatforms.innerHTML ? 'flex' : 'none';
             this.updateModalProgress(); this.renderStars(id); this.renderContent(item);
             this.bindComments(id);
             this.endSearchFocus();
