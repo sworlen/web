@@ -524,19 +524,30 @@
             profileReviewsUnsub: null,
             mediaById: new Map(),
             mediaRecords: [],
+            mediaBootstrapStarted: false,
             suppressOwnProfileLoad: false
         },
 
         async init() {
+            this.state.mediaBootstrapStarted = true;
             this.prepareMediaCache();
             this.syncPlaylists();
             this.subscribeProfiles();
             this.subscribeAllReviews();
             this.fetchCommunityProfiles('');
             this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
-            await this.loadUserRecentReviews(this.state.activeProfileUid);
-            this.renderProfile();
+
+            // Fast first paint: render grid immediately and load slower DB sections in background.
             this.renderGrid();
+            this.renderProfile();
+
+            setTimeout(() => this.fetchCommunityProfiles(''), 0);
+            this.loadUserRecentReviews(this.state.activeProfileUid).then(() => {
+                if (this.state.view === 'profile') this.renderProfile();
+            }).catch(() => {});
+
+            // If mediaData arrives a bit later, refresh automatically (keeps UI responsive under slow script load).
+            this.ensureMediaCacheReady();
             window.addEventListener('resize', () => this.updateSearchOverlayTop());
         },
 
@@ -596,12 +607,39 @@
             const source = (typeof mediaData !== 'undefined' && Array.isArray(mediaData))
                 ? mediaData
                 : (Array.isArray(window.mediaData) ? window.mediaData : []);
-            this.state.mediaRecords = source.map(item => ({
-                ...item,
-                _id: item.id?.toString(),
-                _qTitle: this.normalizeText(item.title || '')
-            }));
-            this.state.mediaById = new Map(this.state.mediaRecords.map(item => [item._id, item]));
+            if (!source.length) return;
+            const out = new Array(source.length);
+            const byId = new Map();
+            for (let i = 0; i < source.length; i += 1) {
+                const item = source[i] || {};
+                const normalized = {
+                    ...item,
+                    _id: item.id?.toString(),
+                    _qTitle: this.normalizeText(item.title || '')
+                };
+                out[i] = normalized;
+                if (normalized._id) byId.set(normalized._id, normalized);
+            }
+            this.state.mediaRecords = out;
+            this.state.mediaById = byId;
+        },
+
+        ensureMediaCacheReady() {
+            if (this.state.mediaRecords.length) return;
+            const startedAt = Date.now();
+            const timer = setInterval(() => {
+                if (this.state.mediaRecords.length) {
+                    clearInterval(timer);
+                    return;
+                }
+                this.prepareMediaCache();
+                if (this.state.mediaRecords.length) {
+                    clearInterval(timer);
+                    this.renderGrid();
+                    return;
+                }
+                if (Date.now() - startedAt > 15000) clearInterval(timer);
+            }, 250);
         },
 
         normalizeText(v) {
