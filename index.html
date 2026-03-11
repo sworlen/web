@@ -555,7 +555,6 @@
             mediaRecords: [],
             mediaBootstrapStarted: false,
             mediaLoadPromise: null,
-            mediaLoadError: '',
             confirmAction: null,
             reviewEditTarget: null,
             filteredCacheSig: '',
@@ -654,7 +653,7 @@
                     return values[0];
                 };
                 try {
-                    const paths = ['./data.json', 'data.json', '/data.json', './assets/data.json', './data/data.json'];
+                    const paths = ['./data.json', 'data.json'];
                     let loaded = false;
                     for (const path of paths) {
                         try {
@@ -670,20 +669,15 @@
                             }
                             if (parsed.length) {
                                 window.mediaData = parsed;
-                                this.state.mediaLoadError = '';
                                 loaded = true;
                                 break;
                             }
                         } catch (_) {}
                     }
-                    if (!loaded) {
-                        window.mediaData = [];
-                        this.state.mediaLoadError = 'Nepodařilo se najít platný dataset (data.json).';
-                    }
+                    if (!loaded) window.mediaData = [];
                 } catch (e) {
                     console.warn('Nepodařilo se načíst data.json', e);
                     window.mediaData = Array.isArray(window.mediaData) ? window.mediaData : [];
-                    this.state.mediaLoadError = 'Načtení data.json selhalo.';
                 }
             })();
             await this.state.mediaLoadPromise;
@@ -764,8 +758,7 @@
                 const normalized = {
                     ...item,
                     _id: item.id?.toString(),
-                    _qTitle: this.normalizeText(item.title || ''),
-                    year: item.year || (item.release ? String(item.release).slice(0, 4) : '')
+                    _qTitle: this.normalizeText(item.title || '')
                 };
                 out[i] = normalized;
                 if (normalized._id) byId.set(normalized._id, normalized);
@@ -1485,11 +1478,6 @@
             document.getElementById('prev-btn').disabled = this.state.page === 1;
             document.getElementById('next-btn').disabled = this.state.page === totalPages;
             if(document.getElementById('stats-counter')) document.getElementById('stats-counter').innerText = `${items.length} TITULŮ`;
-            if (!this.state.mediaRecords.length) {
-                const hint = this.state.mediaLoadError || 'Dataset je prázdný.';
-                grid.innerHTML = `<div style="grid-column:1/-1; border:1px solid var(--glass-border); border-radius:18px; padding:18px; color:var(--text-dim)">Nebyla načtena data pro karty. ${hint}</div>`;
-                return;
-            }
             grid.innerHTML = slice.map(item => {
                 const userRating = this.state.db.ratings[item.id] || 0, isFav = this.state.db.fav.includes(item.id.toString());
                 const stats = this.state.globalRatings[item.id.toString()], avg = stats && stats.count > 0 ? (stats.sum / stats.count).toFixed(1) : "0.0";
