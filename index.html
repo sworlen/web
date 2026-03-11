@@ -469,7 +469,6 @@
     </div>
 </div>
 
-<script src="data.js"></script>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -555,6 +554,7 @@
             mediaById: new Map(),
             mediaRecords: [],
             mediaBootstrapStarted: false,
+            mediaLoadPromise: null,
             confirmAction: null,
             reviewEditTarget: null,
             filteredCacheSig: '',
@@ -565,6 +565,7 @@
 
         async init() {
             this.state.mediaBootstrapStarted = true;
+            await this.loadMediaData();
             this.prepareMediaCache();
             this.syncPlaylists();
             this.state.activeProfileUid = this.state.user?.uid || this.state.activeProfileUid;
@@ -585,6 +586,28 @@
             // If mediaData arrives a bit later, refresh automatically (keeps UI responsive under slow script load).
             this.ensureMediaCacheReady();
             window.addEventListener('resize', () => this.updateSearchOverlayTop());
+        },
+
+        async loadMediaData() {
+            if (Array.isArray(window.mediaData) && window.mediaData.length) return;
+            if (this.state.mediaLoadPromise) {
+                await this.state.mediaLoadPromise;
+                return;
+            }
+            this.state.mediaLoadPromise = (async () => {
+                try {
+                    const res = await fetch('./data.json', { cache: 'force-cache' });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    if (Array.isArray(data)) window.mediaData = data;
+                    else if (Array.isArray(data?.mediaData)) window.mediaData = data.mediaData;
+                    else window.mediaData = [];
+                } catch (e) {
+                    console.warn('Nepodařilo se načíst data.json', e);
+                    window.mediaData = Array.isArray(window.mediaData) ? window.mediaData : [];
+                }
+            })();
+            await this.state.mediaLoadPromise;
         },
 
         deferTask(fn) {
@@ -675,6 +698,9 @@
                 if (this.state.mediaRecords.length) {
                     clearInterval(timer);
                     return;
+                }
+                if (!Array.isArray(window.mediaData) || !window.mediaData.length) {
+                    this.loadMediaData().catch(() => {});
                 }
                 this.prepareMediaCache();
                 if (this.state.mediaRecords.length) {
