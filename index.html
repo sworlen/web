@@ -602,43 +602,6 @@
                 return;
             }
             this.state.mediaLoadPromise = (async () => {
-                const readCachedMedia = () => {
-                    try {
-                        const raw = localStorage.getItem('mediaDataCacheV1');
-                        if (!raw) return [];
-                        const parsed = JSON.parse(raw);
-                        return Array.isArray(parsed) ? parsed : [];
-                    } catch (_) {
-                        return [];
-                    }
-                };
-
-                const writeCachedMedia = (arr) => {
-                    try {
-                        if (Array.isArray(arr) && arr.length) {
-                            localStorage.setItem('mediaDataCacheV1', JSON.stringify(arr));
-                        }
-                    } catch (_) {}
-                };
-
-                const fetchTextWithRetry = async (path) => {
-                    const variants = [
-                        path,
-                        `${path}${path.includes('?') ? '&' : '?'}_ts=${Date.now()}`
-                    ];
-                    let lastErr = null;
-                    for (const url of variants) {
-                        try {
-                            const res = await fetch(url, { cache: 'no-store' });
-                            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                            return await res.text();
-                        } catch (e) {
-                            lastErr = e;
-                        }
-                    }
-                    throw lastErr || new Error('Fetch failed');
-                };
-
                 const tryParseLooseJsonList = (rawText) => {
                     if (!rawText || typeof rawText !== 'string') return [];
                     const text = rawText.trim();
@@ -695,7 +658,9 @@
                     let loaded = false;
                     for (const path of paths) {
                         try {
-                            const rawText = await fetchTextWithRetry(path);
+                            const res = await fetch(path, { cache: 'force-cache' });
+                            if (!res.ok) continue;
+                            const rawText = await res.text();
                             let parsed = [];
                             try {
                                 const data = JSON.parse(rawText);
@@ -705,32 +670,20 @@
                             }
                             if (parsed.length) {
                                 window.mediaData = parsed;
-                                writeCachedMedia(parsed);
                                 this.state.mediaLoadError = '';
                                 loaded = true;
                                 break;
                             }
-                        } catch (e) {
-                            console.warn(`Načtení datasetu selhalo pro ${path}`, e);
-                        }
+                        } catch (_) {}
                     }
                     if (!loaded) {
-                        const cached = readCachedMedia();
-                        if (cached.length) {
-                            window.mediaData = cached;
-                            this.state.mediaLoadError = 'Používám offline cache datasetu (data.json se teď nepodařilo načíst).';
-                        } else {
-                            window.mediaData = [];
-                            this.state.mediaLoadError = 'Nepodařilo se najít platný dataset (data.json).';
-                        }
+                        window.mediaData = [];
+                        this.state.mediaLoadError = 'Nepodařilo se najít platný dataset (data.json).';
                     }
                 } catch (e) {
                     console.warn('Nepodařilo se načíst data.json', e);
-                    const fallback = Array.isArray(window.mediaData) && window.mediaData.length ? window.mediaData : readCachedMedia();
-                    window.mediaData = Array.isArray(fallback) ? fallback : [];
-                    this.state.mediaLoadError = window.mediaData.length
-                        ? 'Načtení data.json selhalo, používám fallback data.'
-                        : 'Načtení data.json selhalo.';
+                    window.mediaData = Array.isArray(window.mediaData) ? window.mediaData : [];
+                    this.state.mediaLoadError = 'Načtení data.json selhalo.';
                 }
             })();
             await this.state.mediaLoadPromise;
